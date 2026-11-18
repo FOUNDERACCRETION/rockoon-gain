@@ -1,0 +1,261 @@
+% NHSJS-format skeleton. Build with:  python3 build.py   (writes nhsjs_standard.pdf and nhsjs_online.pdf)
+% The grey NOTES boxes list facts and numbers only. Replace each box with prose you write yourselves,
+% then delete the box. Do not paste sentences from the arXiv version: see README.md in this folder.
+\documentclass[12pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,graphicx,booktabs,array,caption,enumitem,xcolor,framed}
+\usepackage[section]{placeins}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=1pt,topsep=3pt}
+\input{../paper/results.tex}
+\makeatletter
+\newcommand{\tabin}[1]{\@@input #1 }
+\newcommand{\R}[1]{\csname res@#1\endcsname}
+\newcommand{\defref}[2]{\expandafter\gdef\csname ref@#1\endcsname{#2}}
+\newcommand{\showref}[1]{\csname ref@#1\endcsname}
+\DeclareRobustCommand{\onlinecite}[1]{\@tempswafalse\@for\@k:=#1\do{\if@tempswa\textsuperscript{,}\fi\@tempswatrue\ ((\showref{\@k}))}}
+\newif\ifonline \input{mode.tex}
+\ifonline
+  % online publication format: the full citation in double parentheses at every location
+  \let\cite\onlinecite
+\else
+  \usepackage[superscript,nomove]{cite}
+  \renewcommand{\@biblabel}[1]{#1.}
+\fi
+\makeatother
+\input{refs.tex}
+\definecolor{shadecolor}{gray}{0.92}
+\newenvironment{notes}{\begin{shaded}\small\textbf{NOTES (facts only; write this part yourselves, then delete the box)}\begin{itemize}}{\end{itemize}\end{shaded}}
+\newcommand{\ms}{\,\mathrm{m\,s^{-1}}}
+\newcommand{\kgm}{\,\mathrm{kg\,m^{-3}}}
+\title{\textbf{Attributing the rockoon advantage and the mass-optimal float altitude for balloon-launched sounding rockets}}
+\author{}  % review copy: no names, affiliations or acknowledgements
+\date{}
+\begin{document}
+\maketitle
+
+\section*{Abstract}
+\begin{notes}
+\item NHSJS limit: 200--250 words in total, under the four headings below, then keywords.
+\end{notes}
+\noindent\textbf{Background/Objective.}
+\begin{notes}
+\item A rockoon is a sounding rocket ignited under a stratospheric balloon. Open questions: how much of the apogee gain comes from drag, nozzle and head start; which float altitude needs the least launched mass when the balloon is counted.
+\end{notes}
+\noindent\textbf{Methods.}
+\begin{notes}
+\item First-order model: 1976 standard atmosphere, zero-pressure balloon sizing, equilibrium thermochemistry, point-mass trajectory, tank masses. Checked against Deacon, Super Loki and nine Deacon rockoon flights. Shapley attribution over eight runs. \R{ensN} random vehicles. Monte Carlo and Sobol indices.
+\end{notes}
+\noindent\textbf{Results.}
+\begin{notes}
+\item Baseline 301\,kg vehicle: \R{gndAp}\,km from the ground, \R{balAp}\,km from 30\,km; ratio \R{gainRatio}, or \R{optRatio} with each vehicle designed for its own launch.
+\item Shares: drag \R{decFDrag}\%, nozzle \R{decFNozzle}\%, head start \R{decFHead}\%.
+\item Least launched mass for 100\,km at \R{zsLo}--\R{zsHi}\,km float altitude, saving \R{zsSaveLo}--\R{zsSaveHi}\%.
+\item Drag group alone: $R^2$ \R{fitLdOne} for ground drag loss, \R{fitSdOne} for drag share.
+\end{notes}
+\noindent\textbf{Conclusions.}
+\begin{notes}
+\item What the result means for someone choosing a float altitude; the main limit (first-order model, liquid engine not flight-validated).
+\end{notes}
+\noindent\textbf{Keywords.} rockoon; sounding rocket; high-altitude balloon; drag loss; nozzle expansion; Shapley value; sensitivity analysis
+
+\section*{Introduction}
+\begin{notes}
+\item Target length: about 900 words. NHSJS asks for these parts in order: background and context; problem statement and rationale; significance and purpose; objectives; scope and limitations; theoretical framework; methodology overview.
+\item Background: Van Allen's rockoons of 1952--53 \cite{ludwig2004,corliss1971,vanallen1959}; recent studies \cite{okninski2016,li2022,shoyama2022,shoyama2021,shoyama2026,janhunen2018}; air launch to orbit \cite{sarigul2005}. Jones (1955) \cite{jones1955} not obtained: read it or drop it.
+\item Gap: none of these splits the gain into causes, and those that optimise altitude do not count the balloon's mass \cite{okninski2016}.
+\item Objectives, as three hypotheses. H1: the drag group $\Pi_D$ alone orders the benefit. H2: a mass-optimal float altitude exists. H3: the drag coefficient stops mattering above some altitude.
+\item Theoretical framework: $\Pi_D=C_DA\,p(z_0)/(m_0g_0)$ is the ballistic parameter of Allen and Eggers \cite{allen1958}; it is not new.
+\item Scope: vertical point-mass flight, one propellant, no cost model, no experiment.
+\end{notes}
+
+\section*{Methods}
+\begin{notes}
+\item Target length: about 1{,}300 words. NHSJS headings that apply to a modelling study: research design; variables and measurements; procedure; data analysis. ``Participants'' and ``ethical considerations'' do not apply: say so in one line.
+\item Research design: computational study; every number generated by code in the repository.
+\item Atmosphere \cite{ussa1976}. Balloon: buoyancy sizing, envelope 30\,g\,m$^{-2}$ (20--40) \cite{yajima2009,csbf}.
+\item Propulsion: UDMH/N$_2$O$_4$, 2.0\,MPa, O/F 2.4, efficiency 0.92, shifting equilibrium in Cantera \cite{cantera,gordon1994,mcbride2002}. Nozzle rule: largest area ratio with exit pressure not below ambient and exit area not above the body cross-section.
+\item Trajectory: vertical point mass, drag curve assumed, integrated with SciPy \cite{scipy}. Equation to keep:
+\end{notes}
+\begin{equation}
+\Pi_D=\frac{C_DA\,p(z_0)}{m_0g_0}\label{eq:pid}
+\end{equation}
+\begin{notes}
+\item Tanks and pressurant: thin-walled spheres, aluminium 6061-T6 or 304 steel \cite{asm,astm}, helium properties \cite{nist}.
+\item Validation data: Deacon ground rounds \cite{watson1949}; Super Loki Dart \cite{bollermann1968}; nine Deacon rockoon flights \cite{smith1954}.
+\item Attribution: eight runs with the balloon or ground environment for each of head start, drag and nozzle; Shapley average over six orders \cite{shapley1953}.
+\item Ensemble: \R{ensN} vehicles, 20--5000\,kg; least-squares fits. Closure for 100\,km apogee with balloon, gondola and gas counted.
+\item Uncertainty: Monte Carlo (\R{mcN} samples); Sobol indices with Jansen estimators \cite{jansen1999,saltelli2010}; drag build-up check \cite{niskanen2013}; over-expanded ground nozzle \cite{sutton2017}.
+\end{notes}
+
+\section*{Results}
+\begin{notes}
+\item Target length: about 1{,}600 words plus the floats below (five figures, five tables).
+\item Validation: Deacon rounds 2--7 high by \R{deaErrMean}\% on average; Super Loki burnout velocity \R{lokiVbErr}\%, apogee \R{lokiApErr}\%; rockoon groups to about 10\% with one fitted mass each; two highest flights under-predicted by 11--17\%.
+\end{notes}
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{../paper/figures/fig_validation.pdf}
+\caption{Validation. (a) Computed against measured maximum velocity for the eight Deacon ground rounds of Ref.~\cite{watson1949}; crosses show the model with drag switched off. (b) Deacon rockoon flights of 1952--53 \cite{smith1954}: zenith against firing altitude (symbols) and the model with one fitted gross mass per group (lines; bands for drag scale factors of 0.8--1.2).}
+\label{fig:validation}
+\end{figure}
+
+\begin{table}[!htb]
+\centering
+\caption{Deacon rockoon firings \cite{smith1954}: firing altitude and zenith from the data sheets, and the apogee computed with one fitted gross mass per group (\R{rkSuiMass}\,kg for the Iowa flights, \R{rkNrlMass}\,kg for the NRL flights).}
+\label{tab:rockoons}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Flight & Firing altitude (km) & Zenith (km) & Computed (km) & Difference (\%) \\
+\midrule
+\tabin{../paper/tab_rockoons.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{notes}
+\item Baseline: \R{gndAp}\,km and \R{balAp}\,km, ratio \R{gainRatio}. Shares \R{decFDrag}/\R{decFNozzle}/\R{decFHead}\%. Range over switching orders: drag \R{ordDragLo}--\R{ordDragHi}\%, nozzle \R{ordNozzleLo}--\R{ordNozzleHi}\%, head start \R{ordHeadLo}--\R{ordHeadHi}\%.
+\end{notes}
+\begin{table}[!htb]
+\centering
+\caption{Baseline vehicle (301.27\,kg gross, 151.27\,kg propellant, diameter 0.40\,m, thrust-to-weight ratio 4, $\eta=0.92$).}
+\label{tab:baseline}
+\small
+\begin{tabular}{lccc}
+\toprule
+ & Ignition at 30\,km & Ignition at 29\,km & Ground \\
+ & from rest & after 1\,km fall & launch \\
+\midrule
+Nozzle area ratio & \R{balEps} & \R{fallEps} & \R{gndEps} \\
+Specific impulse at ignition (s) & \R{balIsp} & \R{fallIsp} & \R{gndIsp} \\
+Burn time (s) & \R{balTb} & \R{fallTb} & \R{gndTb} \\
+Burnout altitude (km) & \R{balHb} & \R{fallHb} & \R{gndHb} \\
+Burnout velocity (m\,s$^{-1}$) & \R{balVb} & \R{fallVb} & \R{gndVb} \\
+$\Delta v$ from thrust (m\,s$^{-1}$) & \R{balDv} & \R{fallDv} & \R{gndDv} \\
+Gravity loss (m\,s$^{-1}$) & \R{balLg} & \R{fallLg} & \R{gndLg} \\
+Drag loss (m\,s$^{-1}$) & \R{balLd} & \R{fallLd} & \R{gndLd} \\
+Maximum dynamic pressure (kPa) & \R{balQ} & \R{fallQ} & \R{gndQ} \\
+\textbf{Apogee (km)} & \textbf{\R{balAp}} & \textbf{\R{fallAp}} & \textbf{\R{gndAp}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{../paper/figures/fig_decomposition.pdf}
+\caption{Decomposition of the apogee gain. (a) Baseline vehicle against float altitude: ground-launch apogee and the three contributions. (b) The same as shares of the gain. (c) Shares at a float altitude of 30\,km against the ballistic parameter. Colours as in (b). Filled symbols: gross mass varied from 25 to 2000\,kg at constant proportions. Open symbols: diameter of the 301\,kg vehicle varied from 0.25 to 0.60\,m.}
+\label{fig:decomp}
+\end{figure}
+
+\begin{notes}
+\item H1: $\Pi_D$ alone gives $R^2$ \R{fitLdOne} for the ground drag loss and \R{fitSdOne} for the drag share; six groups give \R{fitSdFull}.
+\end{notes}
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{../paper/figures/fig_collapse.pdf}
+\caption{Similarity test over \R{ensN} random vehicles. (a) Drag loss of the ground launch, as a fraction of the thrust $\Delta v$, against $\Pi_D(0)$, coloured by engine; the line is the power-law fit. (b) Drag share of the apogee gain against $\Pi_D(0)$, coloured by float altitude. (c) Drag share against the value given by the six-group fit.}
+\label{fig:collapse}
+\end{figure}
+
+\begin{table}[!htb]
+\centering
+\caption{Variance explained ($R^2$) and residual standard deviation of least-squares fits over the ensemble, using $\Pi_D(0)$ alone (quadratic in $\ln\Pi_D$), with $\psi$ and $\xi$ added, and with $p_c/p_0$, $z_0/H$ and $\Pi_c$ added as well. Residuals are in per cent for the logarithmic quantities and in percentage points (pp) for the shares.}
+\label{tab:collapse}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{2}{c}{$\Pi_D(0)$} & \multicolumn{2}{c}{$+\,\psi,\ \xi$} & \multicolumn{2}{c}{$+\,p_c/p_0,\ z_0/H,\ \Pi_c$} \\
+Quantity & $R^2$ & resid. & $R^2$ & resid. & $R^2$ & resid. \\
+\midrule
+\tabin{../paper/tab_collapse.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{notes}
+\item H2: optimum at \R{zsLo}--\R{zsHi}\,km; saving \R{zsSaveLo}--\R{zsSaveHi}\% of launched mass. The predicted dependence on $\ln\Pi_D$ had the wrong sign.
+\end{notes}
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{../paper/figures/fig_optimum.pdf}
+\caption{(a) Total launched mass (rocket, gondola, envelope and hydrogen) for a 100\,km apogee, divided by the mass of the ground-launched rocket, against float altitude, for aluminium tanks. (b) Float altitude of minimum launched mass against the mass of the ground-launched vehicle. Bars show the range within 5\% of the minimum.}
+\label{fig:optimum}
+\end{figure}
+
+\begin{table}[!htb]
+\centering
+\caption{Mass-optimal float altitude for a 100\,km apogee: ground-launched gross mass, interpolated optimum altitude $z^{*}$, and the launched mass, rocket mass and balloon volume at the nearest computed altitude $z_g$.}
+\label{tab:optimum}
+\small
+\begin{tabular}{cccccccc}
+\toprule
+Tanks & $m_{\mathrm{fix}}$ & Ground-launched & $z^{*}$ & $z_g$ & Launched mass & Rocket & Balloon \\
+ & (kg) & mass (kg) & (km) & (km) & (kg) & (kg) & (m$^3$) \\
+\midrule
+\tabin{../paper/tab_optimum.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{notes}
+\item H3: total-effect index of the drag scale factor \R{sobCdZero} at the ground, \R{sobCdTen} at 10\,km, zero above 15\,km. Monte Carlo: balloon \R{mcBalMed}\,km, ground \R{mcGndMed}\,km (medians).
+\item Robustness: fair comparator \R{optRatio}; best over-expanded ground nozzle \R{sepRatio}; build-up drag \R{buRatio}.
+\end{notes}
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{../paper/figures/fig_sobol.pdf}
+\caption{Total-effect Sobol indices of the apogee of the baseline vehicle. (a) Against ignition altitude. (b) Index of the drag scale factor against $\Pi_D(z_0)$.}
+\label{fig:sobol}
+\end{figure}
+
+\begin{table}[!htb]
+\centering
+\caption{Sensitivity of the main findings to the assumptions varied in this paper.}
+\label{tab:robust}
+\footnotesize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{5.6cm}>{\raggedright\arraybackslash}p{3.4cm}@{}}
+\toprule
+Finding & Varied & Outcome \\
+\midrule
+Balloon-launched apogee is insensitive to drag & Drag scale 0.5--2; computed build-up curve; Super Loki drag table; Sobol analysis & Robust (changes below 1\%) \\
+Ground drag loss scales with $\Pi_D(0)$ & 800 vehicles, four engines; cross-validation & Robust ($R^2=\R{cvLd}$ out of sample) \\
+Drag is the largest share of the gain & Float altitude, size, chamber pressure, body shape, drag table, Monte Carlo & Holds in every single-vehicle case except the slimmest body (0.25\,m), where the nozzle share is one point larger; \R{ensDragLargest}\% of the ensemble \\
+Mass-optimal float altitude near 20\,km & 14 families, three target apogees, envelope density, gondola fraction & Robust (\R{zsVarLo}--\R{zsHi}\,km) \\
+Drag-coefficient uncertainty vanishes above 15\,km & Sobol indices with bootstrap intervals & Robust \\
+Apogee ratio of 6.2 for the baseline & Fair comparator (\R{optRatio}); best over-expanded ground nozzle (\R{sepRatio}); build-up drag (\R{buRatio}); Super Loki drag table (\R{acRatio}); tilt & Depends on the set-up \\
+Exact shares 52/31/17\% & Chamber pressure, nozzle rule, body shape, drag table & Vary by about ten points \\
+Absolute apogees & Efficiency, dry mass, tilt, validation offset of about 6\% & Model outputs only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section*{Discussion}
+\begin{notes}
+\item Target length: about 900 words. NHSJS parts in order: restatement of key findings; implications and significance; connection to objectives; recommendations; limitations; closing thought. No new information here.
+\item Connection to objectives: H1 holds for the drag loss and fails for the shares; H2 holds for existence and fails for the predicted trend; H3 holds.
+\item Limitations to state: first-order model; liquid engine not flight-validated; one fitted mass per rockoon group; the two drag checks disagree (ground firings fit \R{deaCdFit}, rockoon flights prefer about 2); nozzle mass not counted; no wind, pointing or cost.
+\item Recommendations: a measured or computed drag curve for a defined vehicle; flight data for a liquid rockoon; a six-degree-of-freedom launch model.
+\end{notes}
+
+\section*{Acknowledgments}
+\begin{notes}
+\item Leave empty in the review copy. Add names only in the final version.
+\end{notes}
+
+\section*{AI use statement}
+\begin{notes}
+\item NHSJS wants this after the Acknowledgments and before the References. Name each tool and what it was used for. It must be true of the version you submit.
+\end{notes}
+
+\ifonline\else
+\begin{thebibliography}{99}
+\input{bib_order.tex}
+\end{thebibliography}
+\fi
+\end{document}

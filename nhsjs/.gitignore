@@ -1,0 +1,6 @@
+*.aux
+*.log
+*.out
+nhsjs.pdf
+mode.tex
+bib_order.tex
