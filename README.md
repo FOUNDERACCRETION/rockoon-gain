@@ -1,7 +1,6 @@
 # Rockoon apogee-gain decomposition
 
-Code and manuscript for "What governs the rockoon advantage? An atmospheric-column similarity parameter, an attribution
-of the apogee gain, and the optimum float altitude for balloon-launched sounding rockets" (Ramnani, Aduru, Reddy, 2026).
+Code and manuscript for "Attributing the rockoon advantage and the mass-optimal float altitude for balloon-launched sounding rockets" (Ramnani, Aduru, Reddy, 2026).
 
 ## Check validity
 

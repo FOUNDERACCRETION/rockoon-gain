@@ -14,7 +14,7 @@ Every entry must reach "checked by an author against the original" before upload
 | okninski2016 | OPENED by the research pass (full text, author-uploaded copy); abstract page opened separately | 20-40 km launch altitudes, 15 deg planar trajectory, latex balloon clusters, 0.92 Isp factor, nozzle exit limited to stage diameter, total fin span 3d, "highest launch altitude best", negligible relative wind under the balloon | **An author must read the full paper** and confirm each of these statements; the research pass noted an inconsistency between its Tables 3 and 4 |
 | li2022 | RECORD (publisher page blocked) | Multi-stage rockoon optimisation for orbit | Confirm authors, volume, pages on the SAGE page |
 | jorda2012 | RECORD (IAF listing) | Rockoons for small satellites | Confirm paper code |
-| shoyama2021 | OPENED | Suspended rail launcher, azimuth control | none |
+| shoyama2021 | OPENED (MDPI open-access page, 18 Nov) | Crane-suspended rail launcher, CMG azimuth control, three model-rocket launches; contains no analysis of apogee against launch altitude | Open access: each author should read it once |
 | shoyama2026 | OPENED | Balloon launch experiment; elevation oscillation open | Confirm the "open problem" wording against the paper |
 | jones1955 | RECORD (seen in a reference list only) | Existence of an early estimation method; paper states it was not obtained | Obtain and read it before making any novelty claim |
 | traveler | OPENED (mirror copy) | +20 % drag tuning; 339,800 ft apogee | Confirm the URL resolves; the copy read was a mirror |
@@ -41,10 +41,12 @@ okninski2016 additionally supports two statements taken from the research pass, 
 | yajima2009 | RECORD (publisher page) | Zero-pressure balloon principles | none |
 | niskanen2013, niskanen2009 | OPENED (technical documentation v13.05, Chapter 3 and Appendix B, machine-read) | Drag build-up equations 3.78-3.94 and the tangent-ogive rule of Appendix B, as implemented in DragBuildUp | **Check each implemented equation against the PDF**; the interpolation between Mach 1 and 1.3 is our cubic through the stated end values and slopes, and the subsonic nose term is fitted at Mach 1 |
 | jansen1999 | RECORD (first page seen) | Sobol estimators used in the code | none |
-| janhunen2018 | RECORD + research pass (full text) | 18 km chosen qualitatively for a steam-balloon launcher | Confirm authors and that it is cited as an arXiv preprint only |
+| janhunen2018 | OPENED (publisher page) + research pass (full text) | 18 km chosen qualitatively for a steam-balloon launcher. Now cited as published: Aeronaut. J. 123(1263), 600-616 (2019), doi:10.1017/aer.2019.10 | none |
 | nasaldb | OPENED (machine-read PDF) | NASA 29.47 and 59.84 MCF balloons: 3600 lb and 2751 lb, 0.8 and 0.4 mil film | Document carries no number; title taken from its heading. Confirm |
 | nist (helium) | OPENED | Helium density 43.571 kg/m3 at 290 K, 30 MPa | none |
 | smith1954 | OPENED (machine-read scan of NRL Report 4276 on DTIC; Deacon section and data sheets) | Firing altitude and zenith of nine Deacon rockoon flights (SUI-3, 4, 7, 13, 15, 23; NRL-1, 4, 5); nominal payload 50 lb | **Check all nine pairs against the scanned data sheets.** Several other sheets were garbled or had uncertain designations and were left out; the SUI-5/SUI-6 sheets conflict with the summary table. Confirm author and report number on the title page |
+| allen1958 | RECORD (NTRS record and report title page seen; summary read) | That the drag group is the parameter of the Allen-Eggers ballistic-entry solution | **Open the report and confirm the form of the parameter before upload** |
+| sutton2017 | CARRIED (not opened) | Over-expanded sea-level nozzles; separation at an exit pressure of roughly 0.4 of ambient | **Confirm the criterion, edition and page in the book, or replace with a source you have read** |
 
 Corrections applied on 18 Nov 2026 from the second research pass: Sarigul-Klijn pages 569-575; 6061-T6 276 MPa relabelled as typical; Van Allen & Gottlieb pages added. **arXiv endorsement: physics subject classes are separate endorsement domains, so a physics.gen-ph endorsement does not cover physics.app-ph.**
 

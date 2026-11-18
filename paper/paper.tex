@@ -21,7 +21,7 @@
 \newcommand{\ms}{\,\mathrm{m\,s^{-1}}}
 \newcommand{\kgm}{\,\mathrm{kg\,m^{-3}}}
 
-\title{\textbf{What governs the rockoon advantage? An atmospheric-column similarity parameter, an attribution of the apogee gain, and the optimum float altitude for balloon-launched sounding rockets}}
+\title{\textbf{Attributing the rockoon advantage and the mass-optimal float altitude for balloon-launched sounding rockets}}
 \author{Aadi Ramnani \and Karthikeya Aduru \and Bala Mysura Sreethan Reddy\\[4pt]
 \small CHIREC International School, Hyderabad, Telangana, India}
 \date{November 2026}
@@ -30,7 +30,7 @@
 \maketitle
 
 \begin{abstract}
-\noindent A rockoon is a sounding rocket carried into the stratosphere by a balloon before ignition. We ask which dimensionless quantities govern its advantage over a ground launch, and whether one of them, $\Pi_D=C_DA\,p(z_0)/(m_0g_0)$, the mass of the air column above the ignition point over the vehicle's drag area divided by the vehicle mass, is enough. A first-order model (standard atmosphere, equilibrium thermochemistry, point-mass trajectory, zero-pressure balloon, tank masses) is checked against Deacon ground firings, the Super Loki Dart and nine Deacon rockoon flights of 1952--53. The apogee gain is split into drag, nozzle and head-start parts by a Shapley attribution over eight counterfactual trajectories. Over \R{ensN} vehicles of 20--5000\,kg with four engine types, $\Pi_D$ at the ground explains \R{fitLdOne} of the variance of the ground-launch drag loss but only \R{fitSdOne} of that of the drag share of the gain; five further groups raise this to \R{fitSdFull}. When the balloon, gondola and gas are counted, the float altitude that minimises the launched mass for a 100\,km apogee is \R{zsLo}--\R{zsHi}\,km over a fifty-fold range of vehicle mass, saving \R{zsSaveLo}--\R{zsSaveHi}\% of the launched mass; earlier work that minimised rocket mass alone found the highest altitude best. The share of apogee variance due to the drag coefficient falls from \R{sobCdZero} at the ground to \R{sobCdTen} at 10\,km and vanishes above 15\,km. For a 301\,kg pressure-fed UDMH/N$_2$O$_4$ vehicle the model gives an apogee of \R{gndAp}\,km from the ground and \R{balAp}\,km from 30\,km, with \R{decFDrag}\% of the gain from drag, \R{decFNozzle}\% from the nozzle and \R{decFHead}\% from the head start. These are model outputs; the model matches ground-launched flights to a few per cent and balloon-launched flights to about 10\%. A 2022 student proposal that motivated the work is audited in an appendix.
+\noindent A rockoon is a sounding rocket carried into the stratosphere by a balloon before ignition. With a first-order model checked against Deacon and Super Loki flights and nine Deacon rockoon flights of 1952--53, we split the apogee gain of a balloon launch into drag, nozzle and head-start parts by a Shapley attribution over eight counterfactual trajectories. For a 301\,kg pressure-fed UDMH/N$_2$O$_4$ vehicle the model gives \R{gndAp}\,km from the ground and \R{balAp}\,km from 30\,km, a ratio of \R{gainRatio} that falls to \R{optRatio} when each vehicle is designed for its own launch; drag supplies about half of the gain, the nozzle a quarter to a third, and the head start the rest. We test whether the ballistic drag parameter $\Pi_D=C_DA\,p(z_0)/(m_0g_0)$ governs these quantities. Over \R{ensN} vehicles of 20--5000\,kg it explains \R{fitLdOne} of the variance of the ground-launch drag loss but only \R{fitSdOne} of that of the drag share; five further groups raise this to \R{fitSdFull}. When the balloon, gondola and gas are counted, the float altitude that minimises the launched mass for a 100\,km apogee is \R{zsLo}--\R{zsHi}\,km over a fifty-fold range of vehicle mass, saving \R{zsSaveLo}--\R{zsSaveHi}\% of the launched mass. The share of apogee variance due to the drag coefficient falls from \R{sobCdZero} at the ground to zero above 15\,km. The model matches ground-launched solid-rocket flights to a few per cent and rockoon apogees to about 10\% with one fitted mass per group, and it under-predicts the two highest rockoon flights by 11--17\%; the liquid-engine model is not validated against flight.
 \end{abstract}
 
 \section{Introduction}
@@ -45,31 +45,31 @@ Table~\ref{tab:prior} sets out what the closest studies analysed and what they l
 
 \begin{table}[!htb]
 \centering
-\caption{Closest prior work. ``Read'' states how much of each source we were able to consult.}
+\caption{Closest prior work. The entry for Jones is left open because we could not obtain the paper; the Citation Ledger in the repository states how much of each source we read.}
 \label{tab:prior}
 \footnotesize
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.5cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{1.9cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{5.6cm}>{\raggedright\arraybackslash}p{6.0cm}@{}}
 \toprule
-Study & What it analysed & What it left open & Read \\
+Study & What it analysed & What it left open \\
 \midrule
-Sarigul-Klijn \emph{et al.} \cite{sarigul2005} & Velocity gain to orbit of one 36\,200\,kg solid vehicle released at 0--30.5\,km and Mach 0--3; loss terms named; nozzle fixed & Split of the gain between the loss terms; sounding-rocket apogee; other vehicle sizes; nozzle change; mass of the carrier & Full text \\
-Okninski \emph{et al.} \cite{okninski2016} & Minimum-mass solid rockets for 1\,kg above 100\,km from 20--40\,km; latex balloon clusters; cost & Attribution of the benefit; total mass with the balloon; scaling with vehicle size; liquid engines & Full text \\
-Janhunen \emph{et al.} \cite{janhunen2018} & Steam balloon lifting a 10\,t rocket to 18\,km & Optimisation of the altitude; attribution & Full text \\
-Li \emph{et al.} \cite{li2022} & Design optimisation of a multi-stage rockoon to orbit & Sounding-rocket apogee; attribution & Record only \\
-Jorda-Siquier \cite{jorda2012} & Rockoons for small satellites to orbit & Sounding-rocket apogee; attribution & Record only \\
-Shoyama \emph{et al.} \cite{shoyama2022} & Hybrid-propellant rockoon; single- and multi-stage performance against launch altitude & Attribution; similarity parameters; float altitude with the balloon mass counted & Abstract \\
-Shoyama \emph{et al.} \cite{shoyama2021,shoyama2026} & Suspended launcher with azimuth control; flight experiments & Performance analysis & Abstract pages \\
-Jones \cite{jones1955} & A method for estimating the altitude of balloon-launched rockets & Not known to us & Not obtained \\
+Sarigul-Klijn \emph{et al.} \cite{sarigul2005} & Velocity gain to orbit of one 36\,200\,kg solid vehicle released at 0--30.5\,km and Mach 0--3; loss terms named; nozzle fixed & Split of the gain between the loss terms; sounding-rocket apogee; other vehicle sizes; nozzle change; mass of the carrier \\
+Okninski \emph{et al.} \cite{okninski2016} & Minimum-mass solid rockets for 1\,kg above 100\,km from 20--40\,km; latex balloon clusters; cost & Attribution of the benefit; total mass with the balloon; scaling with vehicle size; liquid engines \\
+Janhunen \emph{et al.} \cite{janhunen2018} & Steam balloon lifting a 10\,t rocket to 18\,km & Optimisation of the altitude; attribution \\
+Li \emph{et al.} \cite{li2022} & Design optimisation of a multi-stage rockoon to orbit & Sounding-rocket apogee; attribution \\
+Jorda-Siquier \cite{jorda2012} & Rockoons for small satellites to orbit & Sounding-rocket apogee; attribution \\
+Shoyama \emph{et al.} \cite{shoyama2022} & Hybrid-propellant rockoon; single- and multi-stage performance against launch altitude & Attribution; similarity parameters; float altitude with the balloon mass counted \\
+Shoyama \emph{et al.} \cite{shoyama2021,shoyama2026} & Suspended launcher with azimuth control; flight experiments & Performance analysis \\
+Jones \cite{jones1955} & A method for estimating the altitude of balloon-launched rockets & Not known to us \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-This paper asks whether the rockoon advantage is governed by a small number of dimensionless groups. The candidate is the drag group
+This paper attributes the rockoon advantage to its causes, finds the float altitude that minimises the launched mass, and asks whether the advantage is governed by a small number of dimensionless groups. The candidate is the drag group
 \begin{equation}
 \Pi_D(z_0)=\frac{C_D\,A\,p(z_0)}{m_0\,g_0},
 \label{eq:pid}
 \end{equation}
-which is the mass of the air column above the ignition altitude $z_0$, over the drag area $C_DA$, divided by the mass of the vehicle. We test three hypotheses:
+which is the mass of the air column above the ignition altitude $z_0$, over the drag area $C_DA$, divided by the mass of the vehicle. The group is not new. It is $p_0/(g_0\beta)$, where $\beta=m_0/(C_DA)$ is the ballistic coefficient, and with $p_0/g_0$ written as $\rho_0H$ for an exponential atmosphere it is the parameter of the classical solution of Allen and Eggers for ballistic entry \cite{allen1958}, and it is the inverse of a ballistic coefficient made dimensionless by the atmospheric column. What we test is whether this known group also orders the benefit of a balloon launch. The three hypotheses are:
 \begin{itemize}
 \item[H1.] $\Pi_D$ at the ground collapses the ground-launch drag loss, the apogee ratio and the drag share of the gain for vehicles of any size, shape and engine type.
 \item[H2.] For a fixed target apogee there is a float altitude that minimises the total launched mass, and it rises logarithmically with $\Pi_D(0)$.
@@ -96,7 +96,7 @@ The main symbols are listed in Table~\ref{tab:nomen}.
 \caption{Main symbols.}
 \label{tab:nomen}
 \small
-\begin{tabular}{ll@{\qquad}ll}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{5.0cm}l>{\raggedright\arraybackslash}p{5.2cm}@{}}
 \toprule
 $z_0$ & ignition (float) altitude & $\Pi_D$ & drag group, Eq.~(\ref{eq:pid}) \\
 $m_0$, $m_p$ & gross and propellant mass & $\psi$ & initial thrust-to-weight ratio \\
@@ -104,9 +104,10 @@ $d$, $A$ & body diameter and cross-section & $\xi$ & propellant fraction $m_p/m_
 $C_D$ & drag coefficient on $A$ & $p_c$ & chamber pressure \\
 $\varepsilon$, $A_e$ & nozzle area ratio and exit area & $\Pi_c$ & body group $p_cA/F$ \\
 $\eta$ & delivered/ideal specific impulse & $H$ & atmospheric scale height (7\,km) \\
-$F$ & thrust at ignition & $S_D$, $S_N$, $S_H$ & drag, nozzle, head-start shares \\
-$\sigma$ & envelope areal density & $R$ & apogee ratio, balloon/ground \\
-$m_{\mathrm{fix}}$, $f$ & non-tank dry mass; feed-system mass per kg propellant & $z^{*}$ & float altitude of minimum launched mass \\
+$F$ & thrust at ignition & $S_D$, $S_N$, $S_H$ & drag, nozzle and head-start shares \\
+$\sigma$ & envelope areal density & $R$ & apogee ratio, balloon to ground \\
+$m_{\mathrm{fix}}$ & non-tank dry mass & $z^{*}$ & float altitude of least launched mass \\
+$f$ & feed-system mass per kg of propellant & & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -208,7 +209,7 @@ Round & Gross mass & Impulse & Measured $v_{\max}$ & Computed $v_{\max}$ & Diffe
 
 \subsection{Super Loki Dart}
 
-The Super Loki Dart is a two-part meteorological rocket: a 4-inch booster that burns for 2.0\,s and an unpowered dart that coasts to apogee. The NASA contractor report on the system \cite{bollermann1968} gives the masses (28.32\,kg at launch, 16.87\,kg of propellant, a 6.12\,kg dart), the average sea-level thrust (4450\,lb), tabulated drag coefficients for the two configurations from Mach 0 to 7 or 8, and a computed trajectory for launch at $80^{\circ}$ from sea level. We ran this case with a planar point-mass model, constant thrust, and the report's own drag tables. Our burnout velocity is \R{lokiVb}$\ms$ against the report's \R{lokiVbRep}$\ms$ ($\R{lokiVbErr}$\%), and our apogee is \R{lokiAp}\,km against 113.4\,km ($\R{lokiApErr}$\%). The report's printed trajectory shows a thrust that builds up over the burn, whereas ours is constant. For launch from the elevation of White Sands (1219\,m), where the report states that three flights tracked over apogee reached about 125\,km, the model gives \R{lokiWs}\,km at $80^{\circ}$ ($\R{lokiWsErr}$\%); the launch elevation of those flights is not stated. The model therefore over-predicts this vehicle by about 6\% in apogee. For this rocket $\Pi_D(0)\approx\R{lokiPiZero}$ with $C_D=0.5$, within the range studied below.
+The Super Loki Dart is a two-part meteorological rocket: a 4-inch booster that burns for 2.0\,s and an unpowered dart that coasts to apogee. The NASA contractor report on the system \cite{bollermann1968} gives the masses (28.32\,kg at launch, 16.87\,kg of propellant, a 6.12\,kg dart), the average sea-level thrust (4450\,lb), tabulated drag coefficients for the two configurations from Mach 0 to 7 or 8, and a computed trajectory for launch at $80^{\circ}$ from sea level. We ran this case with a planar point-mass model, constant thrust, and the report's own drag tables. Our burnout velocity is \R{lokiVb}$\ms$ against the report's \R{lokiVbRep}$\ms$ ($\R{lokiVbErr}$\%), and our apogee is \R{lokiAp}\,km against 113.4\,km ($\R{lokiApErr}$\%). The report's printed trajectory shows a thrust that builds up over the burn, whereas ours is constant. For launch from the elevation of White Sands (1219\,m), where the report states that three flights tracked over apogee reached about 125\,km, the model gives \R{lokiWs}\,km at $80^{\circ}$ ($\R{lokiWsErr}$\%); the launch elevation of those flights is not stated. The model therefore over-predicts this vehicle by about 6\% in apogee. For this rocket $\Pi_D(0)\approx\R{lokiPiZero}$ with $C_D=0.5$ and the report's reference area of 85.47\,cm$^2$ (\R{lokiPiNom} with the nominal 4-inch diameter), within the range studied below.
 
 \subsection{Deacon rockoon flights of 1952--53}
 
@@ -216,7 +217,7 @@ The Naval Research Laboratory's summary of upper-atmosphere rocket firings \cite
 
 We model each flight as a Deacon fired vertically at the stated altitude with the average impulse of the NACA rounds (\R{deaImp}\,kN\,s), and fit one gross mass to each group of flights, since the two groups carried different instruments. For the six Iowa flights the fitted mass is \R{rkSuiMass}\,kg and the r.m.s. error in apogee is \R{rkSuiRms}\%; for the three NRL flights they are \R{rkNrlMass}\,kg and \R{rkNrlRms}\%. Both masses lie in or just above the \R{nacaMassLo}--\R{nacaMassHi}\,kg flown by NACA. Over all nine flights the errors range from $\R{rkWorst}$\% to $\R{rkBest}$\% (Fig.~\ref{fig:validation}b).
 
-The comparison is informative in two ways. The three Iowa flights of 1952, fired between 10.6 and 13.0\,km, are reproduced to \R{rkEarlyRms}\% r.m.s. with a single mass of \R{rkEarlyMass}\,kg. But the model under-predicts the two highest Iowa flights of 1953: the observed apogee rises faster with firing altitude than the computed one. Lighter payloads on those flights would explain it, and so would more drag than we assume, which makes altitude worth more; doubling the drag scale factor lowers the Iowa r.m.s. error to \R{rkSuiCdRms}\%. The records do not let us separate the two. The model therefore reproduces balloon-launched apogees to about 10\%, with one fitted mass per group, and may understate the benefit of firing altitude for a rocket of high drag.
+The comparison is informative in two ways. The three Iowa flights of 1952, fired between 10.6 and 13.0\,km, are reproduced to \R{rkEarlyRms}\% r.m.s. with a single mass of \R{rkEarlyMass}\,kg. But the model under-predicts the two highest Iowa flights of 1953: the observed apogee rises faster with firing altitude than the computed one. Lighter payloads on those flights would explain it, and so would more drag than we assume, which makes altitude worth more; doubling the drag scale factor lowers the Iowa r.m.s. error to \R{rkSuiCdRms}\%. The records do not let us separate the two. The two drag checks therefore disagree: the ground firings, where velocity was measured directly, fit a scale factor of \R{deaCdFit}, while the rockoon apogees prefer about two. We give more weight to the ground firings, because the rockoon fit is confounded with the unknown payload masses, but the disagreement is unresolved and the drag term carries it. The model therefore reproduces balloon-launched apogees to about 10\%, with one fitted mass per group, and may understate the benefit of firing altitude for a rocket of high drag.
 
 \begin{table}[!htb]
 \centering
@@ -304,7 +305,7 @@ Maximum dynamic pressure (kPa) & \R{balQ} & \R{fallQ} & \R{gndQ} \\
 
 A balloon changes three things at once. The rocket starts higher, and gravity is slightly weaker (the head start). It flies through thinner air (drag). Its nozzle can have a larger area ratio and sees a lower back-pressure (nozzle). To separate them, the trajectory code keeps three altitude offsets: one for the position and gravity, one for the atmosphere used in the drag, and one for the atmosphere used in the nozzle selection and back-pressure. Each can be set to the ground or to the float altitude, which gives eight runs (Table~\ref{tab:runs}).
 
-The effects are not additive. Removing drag is worth more when the nozzle is also better, because the rocket is then faster. We therefore attribute the gain by averaging the contribution of each effect over the six orders in which the three can be switched on, which is the Shapley value of cooperative game theory \cite{shapley1953}. The three contributions add up exactly to the total gain.
+The effects are not additive. Removing drag is worth more when the nozzle is also better, because the rocket is then faster. We therefore attribute the gain by averaging the contribution of each effect over the six orders in which the three can be switched on, which is the Shapley value of cooperative game theory \cite{shapley1953}. The three contributions add up exactly to the total gain. The average hides a real dependence on the order: for the baseline vehicle the drag contribution is \R{ordDragLo}--\R{ordDragHi}\% of the gain depending on when it is switched on, the nozzle contribution \R{ordNozzleLo}--\R{ordNozzleHi}\% and the head start \R{ordHeadLo}--\R{ordHeadHi}\%. The shares quoted below are the averages and should be read with these ranges.
 
 For the baseline at 30\,km, drag accounts for \R{decDrag}\,km of the \R{gainKm}\,km gain (\R{decFDrag}\%), the nozzle for \R{decNozzle}\,km (\R{decFNozzle}\%) and the head start for \R{decHead}\,km (\R{decFHead}\%). The head-start term is close to the float altitude itself, as expected. Table~\ref{tab:runs} shows the interaction directly: with drag alone removed the apogee is \R{runGBG}\,km, with the nozzle alone changed it is \R{runGGB}\,km, and with both it is \R{runGBB}\,km, more than the two separate gains added to the ground value.
 
@@ -412,6 +413,8 @@ The shares of the gain do not collapse in the same way (Fig.~\ref{fig:collapse}b
 
 The fits are not over-fitted: in five-fold cross-validation the out-of-sample $R^2$ is \R{cvLd} for the drag loss with $\Pi_D(0)$ alone, \R{cvSdOne} for the drag share with $\Pi_D(0)$ alone, and \R{cvSd} for the drag share with all six groups (residual \R{cvSdSd} percentage points). The exponent of \R{ldSlope} is below the value of one suggested by Sec.~\ref{sec:groups} because a vehicle that loses more to drag is also slower, which limits the loss.
 
+The six-group fit is an empirical regression with eight coefficients (a constant, $\ln\Pi_D$ and its square, $\ln\psi$, $\xi$, $\ln(p_c/p_0)$, $z_0/H$ and $\ln\Pi_c$), not a similarity law. The coefficients are given in Table~\ref{tab:coef} (Appendix~\ref{app:tables}) so that they can be reused within the sampled ranges; the one-group fit of the drag loss is $\ln(\Delta v_D/\Delta v)=\R{ldA}\,\R{ldB}\ln\Pi_D\,\R{ldC}(\ln\Pi_D)^2$.
+
 H1 is therefore supported for the drag loss and rejected for the shares. The reason is visible in the definition of the shares: they are fractions of a gain that also contains the nozzle and head-start terms, and those depend on the chamber pressure, the body size relative to the thrust, and the float altitude, none of which is in $\Pi_D$. Six groups are needed, not one. Drag is the largest of the three contributions for \R{ensDragLargest}\% of the vehicles, and the drag share lies between \R{ensSdLo}\% and \R{ensSdHi}\% (5th--95th percentile).
 
 \begin{figure}[!htb]
@@ -443,7 +446,7 @@ Section~\ref{sec:closure} compared rockets. What has to be lifted off the ground
 
 The total launched mass has a minimum (Fig.~\ref{fig:optimum}a, Table~\ref{tab:optimum}). It lies between \R{zsLo} and \R{zsHi}\,km for every family, although the ground-launched mass of these families spans \R{zsMassLo} to \R{zsMassHi}\,kg. At the optimum the launched mass is \R{zsSaveLo}--\R{zsSaveHi}\% below that of the ground-launched rocket; the saving is largest for small vehicles and for heavy tanks. The minimum is flat: a float altitude between \R{zsBandLo} and \R{zsBandHi}\,km is within 5\% of the optimum for all fourteen families. For aluminium vehicles with $m_{\mathrm{fix}}$ up to 80\,kg the balloon system becomes heavier than the ground-launched rocket above 32--35\,km; for larger vehicles and for steel tanks the crossing lies at 37.5\,km or beyond. Targets of 60 and 150\,km give optima in the same range (Fig.~\ref{fig:optimum}b).
 
-For the vehicle of Sec.~\ref{sec:closure} ($m_{\mathrm{fix}}=80$\,kg, aluminium) the optimum is at \R{zsBase}\,km, where a \R{zsBaseRocket}\,kg rocket and a \R{zsBaseV}\,m$^3$ balloon make a launched mass of \R{zsBaseTot}\,kg, against \R{zsBaseGnd}\,kg from the ground.
+For the vehicle of Sec.~\ref{sec:closure} ($m_{\mathrm{fix}}=80$\,kg, aluminium) the interpolated optimum is at \R{zsBase}\,km. At the nearest computed altitude, \R{zsBaseGrid}\,km, a \R{zsBaseRocket}\,kg rocket and a \R{zsBaseV}\,m$^3$ balloon make a launched mass of \R{zsBaseTotGrid}\,kg, against \R{zsBaseGnd}\,kg from the ground.
 
 The result is not sensitive to the balloon assumptions. For the same vehicle, envelope areal densities of 20 and 40\,$\mathrm{g\,m^{-2}}$ move the optimum to \R{zsSigLo} and \R{zsSigHi}\,km, and gondola fractions of 5\% and 20\% to \R{zsGonLo} and \R{zsGonHi}\,km, with savings of \R{zsGonLoSave}\% and \R{zsGonHiSave}\% (envelope densities of 20 and 40\,$\mathrm{g\,m^{-2}}$ give \R{zsSigLoSave}\% and \R{zsSigHiSave}\%). Over all twelve such variations for $m_{\mathrm{fix}}=20$, 80 and 320\,kg the optimum stays between \R{zsVarLo} and \R{zsVarHi}\,km.
 
@@ -458,13 +461,13 @@ The optimum rises slowly with size, by about \R{zsSlope}\,km per decade of mass 
 
 \begin{table}[!htb]
 \centering
-\caption{Mass-optimal float altitude for a 100\,km apogee: ground-launched gross mass, optimum altitude $z^{*}$ and launched mass (interpolated between grid points), and rocket mass and balloon volume at the nearest grid point.}
+\caption{Mass-optimal float altitude for a 100\,km apogee: ground-launched gross mass, interpolated optimum altitude $z^{*}$, and the launched mass, rocket mass and balloon volume at the nearest computed altitude $z_g$.}
 \label{tab:optimum}
 \small
-\begin{tabular}{ccccccc}
+\begin{tabular}{cccccccc}
 \toprule
-Tanks & $m_{\mathrm{fix}}$ & Ground-launched & $z^{*}$ & Launched mass & Rocket & Balloon \\
- & (kg) & mass (kg) & (km) & (kg) & (kg) & (m$^3$) \\
+Tanks & $m_{\mathrm{fix}}$ & Ground-launched & $z^{*}$ & $z_g$ & Launched mass & Rocket & Balloon \\
+ & (kg) & mass (kg) & (km) & (km) & (kg) & (kg) & (m$^3$) \\
 \midrule
 \tabin{tab_optimum.tex}
 \bottomrule
@@ -477,13 +480,15 @@ Tanks & $m_{\mathrm{fix}}$ & Ground-launched & $z^{*}$ & Launched mass & Rocket 
 \subsection{Design of the comparison}
 \label{sec:robust}
 
-Two choices in the comparison above favour the balloon, and a third is uncertain. We test all three.
+Three choices in the comparison above could favour the balloon, and a fourth is uncertain. We test all four.
 
 First, the ground-launched vehicle has so far been the balloon vehicle with a different nozzle. A vehicle designed for ground launch would be slimmer. Taking the baseline body to have a length-to-diameter ratio of 10, we let each vehicle choose its own ratio between 10 and 20 at constant volume, and its own thrust-to-weight ratio up to \R{twMax} (a burnout acceleration of 15\,$g$). The ground-launched vehicle then prefers the slimmest body (\R{optGndD}\,m) and a thrust-to-weight ratio of \R{optGndTw}, and reaches \R{optGndAp}\,km. The balloon-launched vehicle keeps the 0.40\,m body, whose larger base allows a larger nozzle, takes a thrust-to-weight ratio of \R{optBalTw}, and reaches \R{optBalAp}\,km. With each vehicle designed for its own launch the ratio is \R{optRatio} instead of \R{gainRatio}, and the gain is \R{optGain}\,km instead of \R{gainKm}\,km. If both vehicles use the slim \R{slimD}\,m body, the apogees are \R{slimGnd} and \R{slimBal}\,km and the shares are \R{slimFDrag}\% drag, \R{slimFNozzle}\% nozzle and \R{slimFHead}\% head start. Drag remains the largest term, but by a smaller margin.
 
-Second, the nozzle term depends on the chamber pressure, because a higher pressure allows a larger area ratio on the ground. Table~\ref{tab:pc} repeats the calculation at 1, 2 and 4\,MPa. The nozzle share falls from \R{pcOneFNozzle}\% at 1\,MPa to \R{pcFourFNozzle}\% at 4\,MPa and the apogee ratio from \R{pcOneRatio} to \R{pcFourRatio}. The ordering of the three terms does not change.
+Second, the rule that the ground nozzle may not over-expand is stricter than practice: sea-level engines commonly run with an exit pressure below ambient, down to a separation limit of roughly 0.4 of ambient \cite{sutton2017}. We therefore let the exit pressure of the ground nozzle fall to between 1.0 and 0.4 of ambient in steps of 0.1. The ground-launched apogee is highest at \R{sepBest} of ambient (area ratio \R{sepEps}): \R{sepGnd}\,km against \R{gndApOne}\,km, a ratio of \R{sepRatio}, with shares of \R{sepFDrag}\% drag, \R{sepFNozzle}\% nozzle and \R{sepFHead}\% head start. At the limit of 0.4 (area ratio \R{sepLimEps}) the apogee is lower, \R{sepLimGnd}\,km, because this vehicle burns out low in the atmosphere and the thrust lost near the ground outweighs what is recovered later. With both freedoms together (its own body and thrust, and any over-expansion down to 0.4) the ground-launched vehicle reaches \R{sepOptGnd}\,km and the ratio is \R{sepOptRatio}. In this model the nozzle rule changes the ratio by about 0.1 and the nozzle share by about one point. We do not count the mass and length of the larger nozzle at altitude, which would reduce the nozzle term.
 
-Third, the drag curve of the baseline vehicle is assumed. With the curve computed by component build-up (Sec.~\ref{sec:traj}) the ground-launched apogee is \R{buGnd}\,km ($\R{buGndChange}$\%), the balloon-launched apogee is \R{buBal}\,km, and the shares are \R{buFDrag}\% drag, \R{buFNozzle}\% nozzle and \R{buFHead}\% head start. As a more severe test of the shape we also replaced it by the tabulated curve of a real sounding rocket, the booster-plus-dart configuration of the Super Loki \cite{bollermann1968}, which has a much higher transonic and supersonic drag coefficient (0.93 between Mach 0.8 and 1.4). The ground-launched apogee changes by $\R{acGndChange}$\% to \R{acGnd}\,km and the balloon-launched one by $\R{acBalChange}$\% to \R{acBal}\,km. The shares become \R{acFDrag}\% drag, \R{acFNozzle}\% nozzle and \R{acFHead}\% head start. The balloon-launched result does not depend on the drag curve; the ground-launched one, and with it the apogee ratio (\R{acRatio}), does. The build-up result shows that for a conventional slender geometry the change is modest.
+Third, the nozzle term depends on the chamber pressure, because a higher pressure allows a larger area ratio on the ground. Table~\ref{tab:pc} repeats the calculation at 1, 2 and 4\,MPa. The nozzle share falls from \R{pcOneFNozzle}\% at 1\,MPa to \R{pcFourFNozzle}\% at 4\,MPa and the apogee ratio from \R{pcOneRatio} to \R{pcFourRatio}. The ordering of the three terms does not change.
+
+Fourth, the drag curve of the baseline vehicle is assumed. With the curve computed by component build-up (Sec.~\ref{sec:traj}) the ground-launched apogee is \R{buGnd}\,km ($\R{buGndChange}$\%), the balloon-launched apogee is \R{buBal}\,km, and the shares are \R{buFDrag}\% drag, \R{buFNozzle}\% nozzle and \R{buFHead}\% head start. As a more severe test of the shape we also replaced it by the tabulated curve of a real sounding rocket, the booster-plus-dart configuration of the Super Loki \cite{bollermann1968}, which has a much higher transonic and supersonic drag coefficient (0.93 between Mach 0.8 and 1.4). The ground-launched apogee changes by $\R{acGndChange}$\% to \R{acGnd}\,km and the balloon-launched one by $\R{acBalChange}$\% to \R{acBal}\,km. The shares become \R{acFDrag}\% drag, \R{acFNozzle}\% nozzle and \R{acFHead}\% head start. The balloon-launched result does not depend on the drag curve; the ground-launched one, and with it the apogee ratio (\R{acRatio}), does. The build-up result shows that for a conventional slender geometry the change is modest.
 
 \subsection{Non-vertical ignition}
 \label{sec:tilt}
@@ -525,8 +530,8 @@ Ground drag loss scales with $\Pi_D(0)$ & 800 vehicles, four engines; cross-vali
 Drag is the largest share of the gain & Float altitude, size, chamber pressure, body shape, drag table, Monte Carlo & Holds in every single-vehicle case except the slimmest body (0.25\,m), where the nozzle share is one point larger; \R{ensDragLargest}\% of the ensemble \\
 Mass-optimal float altitude near 20\,km & 14 families, three target apogees, envelope density, gondola fraction & Robust (\R{zsVarLo}--\R{zsHi}\,km) \\
 Drag-coefficient uncertainty vanishes above 15\,km & Sobol indices with bootstrap intervals & Robust \\
-Apogee ratio of 6.2 for the baseline & Fair comparator (\R{optRatio}); build-up drag (\R{buRatio}); Super Loki drag table (\R{acRatio}); tilt & Depends on the set-up \\
-Exact shares 52/31/17\% & Chamber pressure, body shape, drag table & Vary by about ten points \\
+Apogee ratio of 6.2 for the baseline & Fair comparator (\R{optRatio}); best over-expanded ground nozzle (\R{sepRatio}); build-up drag (\R{buRatio}); Super Loki drag table (\R{acRatio}); tilt & Depends on the set-up \\
+Exact shares 52/31/17\% & Chamber pressure, nozzle rule, body shape, drag table & Vary by about ten points \\
 Absolute apogees & Efficiency, dry mass, tilt, validation offset of about 6\% & Model outputs only \\
 \bottomrule
 \end{tabular}
@@ -537,7 +542,7 @@ Absolute apogees & Efficiency, dry mass, tilt, validation offset of about 6\% & 
 
 To see how firm these results are we drew \R{mcN} samples of five inputs for the baseline vehicle and flew each one from the balloon and from the ground. The inputs and their ranges are: drag scale factor, uniform on 0.8--1.2 (Sec.~\ref{sec:traj}); efficiency $\eta$, uniform on 0.85--0.95; thrust-to-weight ratio, uniform on 3--5; dry mass, normal with a standard deviation of 5\%; and float altitude, uniform on 28--32\,km. Apart from the drag range these are our assumptions.
 
-The balloon-launched apogee has a median of \R{mcBalMed}\,km and a 5th--95th percentile range of \R{mcBalLo}--\R{mcBalHi}\,km (Fig.~\ref{fig:mc}a). None of the samples falls below 100\,km. The ground-launched apogee is \R{mcGndMed}\,km (\R{mcGndLo}--\R{mcGndHi}\,km), and the ratio of the two is \R{mcRatioMed} (\R{mcRatioLo}--\R{mcRatioHi}). The coefficient of variation is \R{mcBalCv}\% from the balloon and \R{mcGndCv}\% from the ground.
+The balloon-launched apogee has a median of \R{mcBalMed}\,km and a 5th--95th percentile range of \R{mcBalLo}--\R{mcBalHi}\,km (Fig.~\ref{fig:mc}a). None of the samples falls below 100\,km. The median lies below the baseline value of \R{balAp}\,km because the sampled efficiency range is centred on 0.90, not on the nominal 0.92. The ground-launched apogee is \R{mcGndMed}\,km (\R{mcGndLo}--\R{mcGndHi}\,km), and the ratio of the two is \R{mcRatioMed} (\R{mcRatioLo}--\R{mcRatioHi}). The coefficient of variation is \R{mcBalCv}\% from the balloon and \R{mcGndCv}\% from the ground.
 
 The two cases are uncertain for different reasons. The rank correlation of the ground-launched apogee with the drag scale factor is $\R{rhoGndCd}$; for the balloon-launched apogee it is $\R{rhoBalCd}$. The balloon-launched apogee is controlled instead by the dry mass ($\R{rhoBalDry}$) and the efficiency ($\R{rhoBalEta}$). A balloon launch therefore removes the quantity that is hardest to predict without wind-tunnel or flight data.
 
@@ -563,7 +568,7 @@ One-at-a-time changes give the same picture. From the balloon, thrust-to-weight 
 
 \subsection{Error budget}
 
-Four kinds of error enter the results, and they differ greatly in size. (i) \emph{Numerical}: the integration error is below 0.1\,m in apogee (Sec.~\ref{sec:validation}), and the planar model at zero tilt reproduces the vertical model to within $10^{-4}$. (ii) \emph{Sampling}: with \R{mcN} samples the bootstrap standard error of the median apogee is \R{mcBalMedSe}\,km from the balloon and \R{mcGndMedSe}\,km from the ground; the Sobol index of the drag coefficient at the ground has a 95\% interval of \R{sobCdZeroLo}--\R{sobCdZeroHi}; the regression residuals are unchanged out of sample. (iii) \emph{Parametric}: the 5th--95th percentile range of the balloon-launched apogee is \R{mcBalLo}--\R{mcBalHi}\,km, about $\pm$15\%, driven by dry mass and engine efficiency. (iv) \emph{Model form}: against the flights and published trajectories available to us the model is high by $\R{deaErrMean}$\% in burnout velocity for the Deacon by about 6\% in apogee for the Super Loki, and within about 10\% r.m.s. of nine rockoon apogees once a mass is fitted, and it omits attitude dynamics, wind and real-gas and structural effects. The model-form and parametric errors dominate. The numerical and sampling errors are negligible beside them, so further gains in accuracy must come from better physics and better input data, not from finer computation.
+Four kinds of error enter the results, and they differ greatly in size. (i) \emph{Numerical}: the integration error is below 0.1\,m in apogee (Sec.~\ref{sec:validation}), and the planar model at zero tilt reproduces the vertical model to within $10^{-4}$. (ii) \emph{Sampling}: with \R{mcN} samples the bootstrap standard error of the median apogee is \R{mcBalMedSe}\,km from the balloon and \R{mcGndMedSe}\,km from the ground; the Sobol index of the drag coefficient at the ground has a 95\% interval of \R{sobCdZeroLo}--\R{sobCdZeroHi}; the regression residuals are unchanged out of sample. (iii) \emph{Parametric}: the 5th--95th percentile range of the balloon-launched apogee is \R{mcBalLo}--\R{mcBalHi}\,km, about $\pm$15\%, driven by dry mass and engine efficiency. (iv) \emph{Model form}: against the flights and published trajectories available to us the model is high by $\R{deaErrMean}$\% in burnout velocity for the Deacon and by about 6\% in apogee for the Super Loki, and it is within about 10\% r.m.s. of nine rockoon apogees once a mass is fitted, and it omits attitude dynamics, wind and real-gas and structural effects. The model-form and parametric errors dominate. The numerical and sampling errors are negligible beside them, so further gains in accuracy must come from better physics and better input data, not from finer computation.
 
 \section{Discussion}
 
@@ -586,7 +591,7 @@ The baseline drag curve is assumed, though it lies close to a curve computed for
 \section{Conclusions}
 
 \begin{enumerate}
-\item The drag group $\Pi_D(0)=C_DA\,p_0/(m_0g_0)$ collapses the drag loss of a ground-launched sounding rocket: over \R{ensN} vehicles of 20--5000\,kg with liquid and solid engines it explains \R{fitLdOne} of the variance, and the loss follows $\R{ldCoef}\,\Pi_D(0)^{\R{ldSlope}}$ of the thrust $\Delta v$.
+\item The ballistic drag parameter $\Pi_D(0)=C_DA\,p_0/(m_0g_0)$ collapses the drag loss of a ground-launched sounding rocket: over \R{ensN} vehicles of 20--5000\,kg with liquid and solid engines it explains \R{fitLdOne} of the variance, and the loss follows $\R{ldCoef}\,\Pi_D(0)^{\R{ldSlope}}$ of the thrust $\Delta v$.
 \item $\Pi_D$ alone does not collapse the shares of the rockoon gain (\R{fitSdOne} of the variance of the drag share). With the thrust-to-weight ratio, propellant fraction, chamber-pressure ratio, body group and float altitude added, the fit reaches \R{fitSdFull} with a residual of \R{fitSdFullSd} percentage points. Drag is the largest contribution for \R{ensDragLargest}\% of the vehicles.
 \item For a 301\,kg pressure-fed UDMH/N$_2$O$_4$ vehicle, ignition at 30\,km raises the apogee from \R{gndAp} to \R{balAp}\,km: \R{decFDrag}\% of the gain is drag, \R{decFNozzle}\% nozzle and \R{decFHead}\% head start. With each vehicle designed for its own launch the apogee ratio is \R{optRatio} instead of \R{gainRatio}.
 \item The float altitude that minimises the launched mass for a 100\,km apogee is \R{zsLo}--\R{zsHi}\,km over a fifty-fold range of vehicle mass, with a saving of \R{zsSaveLo}--\R{zsSaveHi}\% relative to ground launch. It rises by about \R{zsSlope}\,km per decade of mass, contrary to the logarithmic dependence on $\Pi_D$ that we had expected.
@@ -701,6 +706,20 @@ $p_c$ & \multicolumn{2}{c}{$\varepsilon$} & \multicolumn{2}{c}{$\Isp$ (s)} & \mu
 \end{tabular}
 \end{table}
 
+\begin{table}[!htb]
+\centering
+\caption{Coefficients of the six-group least-squares fits of Sec.~\ref{sec:collapse}. Each quantity is the sum of the listed terms times the coefficients. The fits hold only inside the sampled ranges: $\Pi_D(0)$ from \R{ensPiLo} to \R{ensPiHi}, $\psi$ from \R{rngPsiLo} to \R{rngPsiHi}, and $\Pi_c$ from \R{rngPicLo} to \R{rngPicHi}, with the other ranges as in Sec.~\ref{sec:collapse}.}
+\label{tab:coef}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Term & $S_D$ & $S_N$ & $S_H$ & $\ln R$ \\
+\midrule
+\tabin{tab_coef.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Propellant performance against mixture ratio}
 \label{app:thermo}
 
@@ -746,7 +765,9 @@ A flight in India would also have needed, at a minimum, authorisation from the I
 
 \bibitem{sarigul2005} N. Sarigul-Klijn, M. Sarigul-Klijn, and C. Noel, ``Air-launching Earth to orbit: effects of launch conditions and vehicle aerodynamics,'' J. Spacecr. Rockets \textbf{42}, 569--575 (2005), doi:10.2514/1.8634.
 
-\bibitem{janhunen2018} P. Janhunen, P. Toivanen, and K. Ruosteenoja, ``Steam balloon concept for lifting rockets to launch altitude,'' arXiv:1803.03111 (2018).
+\bibitem{janhunen2018} P. Janhunen, P. Toivanen, and K. Ruosteenoja, ``Steam balloon concept for lifting rockets to launch altitude,'' Aeronaut. J. \textbf{123}, 600--616 (2019), doi:10.1017/aer.2019.10.
+
+\bibitem{allen1958} H.\,J. Allen and A.\,J. Eggers, Jr., \emph{A Study of the Motion and Aerodynamic Heating of Ballistic Missiles Entering the Earth's Atmosphere at High Supersonic Speeds}, NACA Report 1381 (National Advisory Committee for Aeronautics, Washington, DC, 1958).
 
 \bibitem{ussa1976} \emph{U.S. Standard Atmosphere, 1976}, NOAA-S/T 76-1562 (National Oceanic and Atmospheric Administration, National Aeronautics and Space Administration, and U.S. Air Force, Washington, DC, 1976).
 
@@ -785,6 +806,8 @@ A flight in India would also have needed, at a minimum, authorisation from the I
 \bibitem{smith1954} C.\,P. Smith, Jr., \emph{Summary of Upper Atmosphere Rocket Research Firings}, Upper Atmosphere Research Report No.~XXI, NRL Report 4276 (Naval Research Laboratory, Washington, DC, February 1954), with supplementary pages by E.\,C. Pressly (February 1958), \url{https://apps.dtic.mil/sti/tr/pdf/ADB957191.pdf}.
 
 \bibitem{shapley1953} L.\,S. Shapley, ``A value for $n$-person games,'' in \emph{Contributions to the Theory of Games II}, edited by H.\,W. Kuhn and A.\,W. Tucker, Annals of Mathematics Studies \textbf{28} (Princeton University Press, Princeton, NJ, 1953), pp.~307--317.
+
+\bibitem{sutton2017} G.\,P. Sutton and O. Biblarz, \emph{Rocket Propulsion Elements}, 9th ed. (Wiley, Hoboken, NJ, 2017).
 
 \bibitem{jansen1999} M.\,J.\,W. Jansen, ``Analysis of variance designs for model output,'' Comput. Phys. Commun. \textbf{117}, 35--43 (1999), doi:10.1016/S0010-4655(98)00154-4.
 

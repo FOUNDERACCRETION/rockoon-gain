@@ -195,18 +195,19 @@ def table():
 class Nozzle:
     """Nozzle for the baseline propellant state (O/F 2.4, 2.0 MPa), chosen for an ignition altitude.
 
-    The expansion ratio is the largest one for which the exit pressure is not below the ambient
-    pressure at ignition and the exit area does not exceed the body cross-section.
+    The expansion ratio is the largest one for which the exit pressure is not below `sep` times the
+    ambient pressure at ignition (sep = 1: no over-expansion; sep = 0.4: over-expanded to a typical
+    separation limit) and the exit area does not exceed the body cross-section.
     """
 
-    def __init__(self, z_ign, thrust, d_body, eta=0.92, key='nozzle'):
+    def __init__(self, z_ign, thrust, d_body, eta=0.92, key='nozzle', sep=1.0):
         nz = table()[key]
         pa = atmosphere(z_ign)[1]
         A_body = math.pi * d_body ** 2 / 4.0
         cstar, pc = nz['cstar'], nz['pc']
         best = None
         for eps, pe, isp in zip(nz['eps'], nz['pe'], nz['isp_vac']):
-            if pe < pa:
+            if pe < sep * pa:
                 break
             mdot = thrust / (G0 * eta * isp - pa * eps * cstar / pc)
             Ae = eps * mdot * cstar / pc
@@ -467,17 +468,17 @@ def diameter(m0, d_ref=0.40, m_ref=301.27, fineness=10.0):
     return d_ref * (m0 / m_ref) ** (1.0 / 3.0) * (10.0 / fineness) ** (1.0 / 3.0)
 
 
-def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle', cd_fn=None):
+def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle', cd_fn=None, sep=1.0):
     """Design the nozzle for the ignition altitude and fly. switches = (kin, drag, nozzle) booleans
     selecting the balloon (True) or ground (False) environment for each effect."""
     d = diameter(m0) if d is None else d
     F = tw * m0 * G0
     if switches is None:
-        nz = Nozzle(z_ign, F, d, eta, key)
+        nz = Nozzle(z_ign, F, d, eta, key, sep)
         r = fly(m0, mp, d, nz.mdot, nz.isp_vac, nz.Ae, z_kin=z_ign, cd_scale=cd_scale, v0=v0, cd_fn=cd_fn)
     else:
         k, dr, n = switches
-        nz = Nozzle(z_ign if n else 0.0, F, d, eta, key)
+        nz = Nozzle(z_ign if n else 0.0, F, d, eta, key, sep)
         r = fly(m0, mp, d, nz.mdot, nz.isp_vac, nz.Ae, z_kin=z_ign if k else 0.0,
                 z_drag=z_ign if dr else 0.0, z_noz=z_ign if n else 0.0, cd_scale=cd_scale, cd_fn=cd_fn)
     r.update(eps=nz.eps, pe=nz.pe, Ae=nz.Ae, mdot=nz.mdot, isp_vac=nz.isp_vac, limit=nz.limit, d=d)

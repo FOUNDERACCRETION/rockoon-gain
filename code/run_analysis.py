@@ -1,3 +1,4 @@
+import math
 """Run every calculation in the paper. Writes results/results.json and paper/results.tex."""
 import json, math, os, sys
 from multiprocessing import Pool
@@ -193,6 +194,20 @@ def main():
         put('dec' + k.title(), base[k], '{:.0f}'); put('decF' + k.title(), 100 * base['f_' + k], '{:.0f}')
     for k, v in base['runs'].items():
         put('run' + k.replace('0', 'G').replace('1', 'B'), v, '{:.0f}')
+    # spread of each contribution over the six switching orders
+    import itertools
+    rr = {tuple(int(c) for c in k): v for k, v in base['runs'].items()}
+    for i_, nm in enumerate(('Head', 'Drag', 'Nozzle')):
+        vals = []
+        for order in itertools.permutations(range(3)):
+            st = [0, 0, 0]
+            for j_ in order:
+                if j_ == i_:
+                    t_ = list(st); t_[i_] = 1
+                    vals.append(100 * (rr[tuple(t_)] - rr[tuple(st)]) / base['gain'])
+                    break
+                st[j_] = 1
+        put('ord' + nm + 'Lo', min(vals), '{:.0f}'); put('ord' + nm + 'Hi', max(vals), '{:.0f}')
     fr_ = MP / M0
     put('propFrac', fr_, '{:.3f}')
     RES['dec_alt'] = [dec(M0, MP, z * 1e3) for z in (5, 10, 15, 20, 25, 30, 35, 40)]
@@ -356,6 +371,7 @@ def main():
     put('lokiImp', 8900 * 4.4482216 / 1e3, '{:.1f}'); put('lokiF', F_sl / 1e3, '{:.1f}')
     A_l = 85.47e-4
     put('lokiPiZero', 0.5 * A_l * 101325.0 / (28.32 * rm.G0), '{:.1f}')
+    put('lokiPiNom', 0.5 * math.pi * 0.1016 ** 2 / 4 * 101325.0 / (28.32 * rm.G0), '{:.1f}')
     # ---- robustness to the shape of the drag curve: NASA CR-61238 booster-plus-dart table in place of the generic curve
     alt = dec(M0, MP, 30e3, cd_fn=rm.cd_superloki)
     alt.pop('cd_fn', None)
@@ -412,6 +428,29 @@ def main():
         Vn = mcf * 1e6 * 0.0283168466; An = (36 * math.pi) ** (1 / 3) * Vn ** (2 / 3)
         put('nasaSig' + tag, 1000 * lb * LB / An, '{:.0f}'); put('nasaM' + tag, lb * LB, '{:.0f}')
         TEX['nasaV' + tag] = thousands(round(Vn, -3)); RES['nasaV' + tag] = Vn
+    # ---- ground nozzle allowed to over-expand (exit pressure down to a fraction `sep` of ambient)
+    SEPS = (1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4)
+    sw = [(sp_, rm.vehicle_run(M0, MP, 0.0, sep=sp_)) for sp_ in SEPS]
+    RES['sep_sweep'] = [dict(sep=a_, eps=b_['eps'], apogee=b_['apogee'] / 1e3) for a_, b_ in sw]
+    sbest, gbest = max(sw, key=lambda x: x[1]['apogee'])
+    sp = dec(M0, MP, 30e3, sep=sbest); RES['dec_sep_best'] = sp
+    put('sepBest', sbest, '{:.1f}'); put('sepEps', gbest['eps'], '{:.1f}'); put('sepGnd', sp['ground'], '{:.1f}'); put('gndApOne', base['ground'], '{:.1f}')
+    put('sepRatio', sp['balloon'] / sp['ground'], '{:.1f}')
+    for k in ('head', 'drag', 'nozzle'):
+        put('sepF' + k.title(), 100 * sp['f_' + k], '{:.0f}')
+    lim = dec(M0, MP, 30e3, sep=0.4); RES['dec_sep_limit'] = lim
+    put('sepLimEps', sw[-1][1]['eps'], '{:.1f}'); put('sepLimGnd', lim['ground'], '{:.1f}'); put('sepLimRatio', lim['balloon'] / lim['ground'], '{:.1f}')
+    put('sepLimFNozzle', 100 * lim['f_nozzle'], '{:.0f}')
+    # both design freedoms together: any over-expansion down to 0.4 and each vehicle optimised
+    cand = []
+    for sp_ in SEPS:
+        for fin in (10.0, 12.5, 15.0, 17.5, 20.0):
+            for tw in np.arange(1.5, tw_max + 1e-9, 0.25):
+                try:
+                    cand.append(rm.vehicle_run(M0, MP, 0.0, d=rm.diameter(M0, fineness=fin), tw=float(tw), sep=sp_)['apogee'] / 1e3)
+                except ValueError:
+                    pass
+    put('sepOptGnd', max(cand), '{:.0f}'); put('sepOptRatio', best['Bal'][0] / max(cand), '{:.1f}')
     # ---- similarity study (results/similarity.json, written by similarity.py)
     S = json.load(open(os.path.join(ROOT, 'results', 'similarity.json')))
     E = S['ensemble']
@@ -456,6 +495,16 @@ def main():
         a11 = rm.fly(M0, MP, 0.40, nz_.mdot, nz_.isp_vac, nz_.Ae, z_kin=z_, rtol=1e-11)['apogee']
         conv.append(abs(a8 - a11))
     put('convMax', max(conv), '{:.1f}')
+    # coefficients of the six-group fits, for reuse
+    names = ['1', '$\\ln\\Pi_D$', '$(\\ln\\Pi_D)^2$', '$\\ln\\psi$', '$\\xi$', '$\\ln(p_c/p_0)$', '$z_0/H$', '$\\ln\\Pi_c$']
+    cols = [('$S_D$', g('f_drag')), ('$S_N$', g('f_noz')), ('$S_H$', g('f_head')), ('$\\ln R$', L(Rr))]
+    coefs = [fit(full(), y_)[2] for _, y_ in cols]
+    with open(os.path.join(ROOT, 'paper', 'tab_coef.tex'), 'w') as f_:
+        f_.write('\n'.join('%s & %s \\\\' % (names[i], ' & '.join('$%+.4f$' % c_[i] for c_ in coefs)) for i in range(8)) + '\n')
+    RES['fit_coefficients'] = {n_.strip('$'): [float(c_[i]) for c_ in coefs] for i, n_ in enumerate(names)}
+    c1_ = fit(one(), L(ldf))[2]
+    put('ldA', c1_[0], '{:+.3f}'); put('ldB', c1_[1], '{:+.3f}'); put('ldC', c1_[2], '{:+.3f}')
+    put('rngPsiLo', g('psi').min(), '{:.1f}'); put('rngPsiHi', g('psi').max(), '{:.1f}'); put('rngPicLo', g('pic').min(), '{:.0f}'); put('rngPicHi', g('pic').max(), '{:.0f}')
     sl = np.polyfit(L(pi0), L(ldf), 1)
     put('ldSlope', sl[0], '{:.2f}'); put('ldCoef', math.exp(sl[1]), '{:.3f}')
     from scipy.stats import spearmanr as sp_
@@ -487,7 +536,7 @@ def main():
         above = [zz for zz, tt in zip(z[1:], tot[1:]) if tt > tot[0]]
         within = z[1:][tot[1:] <= 1.05 * tot[i]]
         A = math.pi * v[0]['d'] ** 2 / 4
-        opt.append(dict(mat=mat, mfix=mfix, target=tgt / 1e3, sigma=sg_, gf=gf_, ground=float(tot[0]), zstar=float(zst), total=tst, rocket=v[i]['m0'], V=v[i]['V'],
+        opt.append(dict(mat=mat, mfix=mfix, target=tgt / 1e3, sigma=sg_, gf=gf_, zgrid=float(z[i]), total_grid=float(tot[i]), ground=float(tot[0]), zstar=float(zst), total=tst, rocket=v[i]['m0'], V=v[i]['V'],
                         pi0=CDREF * A * 101325.0 / (v[0]['m0'] * rm.G0), lo=float(within.min()), hi=float(within.max()),
                         breakeven=float(min(above)) if above else None, curve=[z.tolist(), (tot / tot[0]).tolist()]))
     var = [o for o in opt if (o['sigma'], o['gf']) != (0.030, 0.10)]
@@ -509,12 +558,13 @@ def main():
     b80 = [o for o in o100 if o['mat'] == 'Al6061T6' and o['mfix'] == 80.0][0]
     put('zsBase', b80['zstar'], '{:.0f}'); put('zsBaseTot', b80['total'], '{:.0f}'); put('zsBaseGnd', b80['ground'], '{:.0f}'); put('zsBaseRocket', b80['rocket'], '{:.0f}')
     TEX['zsBaseV'] = thousands(round(b80['V'], -2)); RES['zsBaseV'] = b80['V']
+    put('zsBaseGrid', b80['zgrid'], '{:.1f}'); put('zsBaseTotGrid', b80['total_grid'], '{:.0f}')
     be = [o['breakeven'] for o in o100 if o['breakeven']]
     put('beLo', min(be), '{:.1f}') if be else None; put('beHi', max(be), '{:.1f}') if be else None
     TEX['beCount'] = str(len(be)); TEX['optCount'] = str(len(o100))
     rows = []
     for o in o100:
-        rows.append('%s & %.0f & %s & %.0f & %s & %.0f & %s \\\\' % ('Al' if o['mat'].startswith('Al') else 'steel', o['mfix'], thousands(o['ground']), o['zstar'], thousands(o['total']), o['rocket'], thousands(round(o['V'], -1))))
+        rows.append('%s & %.0f & %s & %.1f & %.1f & %s & %.0f & %s \\\\' % ('Al' if o['mat'].startswith('Al') else 'steel', o['mfix'], thousands(o['ground']), o['zstar'], o['zgrid'], thousands(o['total_grid']), o['rocket'], thousands(round(o['V'], -1))))
     with open(os.path.join(ROOT, 'paper', 'tab_optimum.tex'), 'w') as f:
         f.write('\n'.join(rows) + '\n')
     # Sobol
