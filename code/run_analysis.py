@@ -294,6 +294,9 @@ def main():
     for arr, tag, f in ((bal, 'Bal', '{:.0f}'), (gnd_, 'Gnd', '{:.0f}'), (bal / gnd_, 'Ratio', '{:.1f}')):
         for q, qt in ((5, 'Lo'), (50, 'Med'), (95, 'Hi')):
             put('mc' + tag + qt, np.percentile(arr, q), f)
+    bsr = np.random.default_rng(5)
+    med = [np.median(bsr.choice(bal, len(bal))) for _ in range(500)]; medg = [np.median(bsr.choice(gnd_, len(gnd_))) for _ in range(500)]
+    put('mcBalMedSe', np.std(med), '{:.1f}'); put('mcGndMedSe', np.std(medg), '{:.1f}')
     put('mcBalCv', 100 * np.std(bal) / np.mean(bal), '{:.0f}'); put('mcGndCv', 100 * np.std(gnd_) / np.mean(gnd_), '{:.0f}')
     put('mcPbelow', 100 * np.mean(bal < 100.0), '{:.1f}')
     for i, tag in enumerate(('Head', 'Drag', 'Nozzle')):

@@ -35,6 +35,12 @@ Every entry must reach "checked by an author against the original" before upload
 | shapley1953, saltelli2010 | CARRIED (standard references, not opened) | Attribution method; Sobol estimator | Confirm each record. The code uses the Jansen-type estimators described in Saltelli et al. |
 
 okninski2016 additionally supports two statements taken from the research pass, not from my own reading: exit diameter capped at body diameter, and "highest launch altitude best". Confirm both in the full text.
+| shoyama2022 | RECORD (library and index records; abstract only) | Hybrid rockoon concept and performance study, J. Spacecr. Rockets 59(1), 286-294 | **Read it**: it is a rockoon performance study and may overlap the launch-altitude results |
+| corliss1971 | RECORD (NASA and NTRS pages) | Sounding-rocket history | Confirm it mentions the 1952 rockoons where cited |
+| vanallen1954, vanallen1959 | RECORD (author's publication list) | Original descriptions; the paper says they were not consulted | Obtain if possible; page range of the 1954 chapter not confirmed and so not given |
+| yajima2009 | RECORD (publisher page) | Zero-pressure balloon principles | none |
+| niskanen2009 | RECORD (OpenRocket documentation pages) | Component build-up drag method, cited as not used | Confirm the thesis year |
+| jansen1999 | RECORD (first page seen) | Sobol estimators used in the code | none |
 
 Removed since the October draft because they could not be verified: Van Allen & Gottlieb 1954 (page range),
 NASA NSS 1740.16 (cancelled standard; hydrogen flammability numbers dropped), McDowell 2018, the USC news

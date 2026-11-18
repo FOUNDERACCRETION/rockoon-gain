@@ -83,6 +83,11 @@ def headline():
     check(g, 'nozzle share', 100 * s['nozzle'] / tot, R['decFNozzle'], 1e-6, '%')
     c = rm.close_vehicle(30e3, 80.0, rm.feed_fraction('Al6061T6'))
     check(g, '100 km vehicle gross mass', c['m0'], R['cBalM'], 1e-5, 'kg')
+    nb = rm.Nozzle(30e3, 4 * 301.27 * rm.G0, 0.40)
+    p2 = rm.fly_tilted(301.27, 151.27, 0.40, nb.mdot, nb.isp_vac, nb.Ae, 30e3, 0.0, 'fixed')
+    check(g, 'planar model at zero tilt = vertical model', p2['apogee'] / 1e3, b['apogee'] / 1e3, 1e-4, 'km')
+    a11 = rm.fly(301.27, 151.27, 0.40, nb.mdot, nb.isp_vac, nb.Ae, z_kin=30e3, rtol=1e-11)['apogee']
+    check(g, 'integrator converged (tolerance 1e-8 vs 1e-11)', b['apogee'], a11, 1e-6, 'm')
     sob = R['sobol']
     flag(g, 'Sobol first-order indices sum to <= 1 at every altitude', all(sum(x['S']) <= 1.02 for x in sob),
          'max sum %.2f' % max(sum(x['S']) for x in sob))
