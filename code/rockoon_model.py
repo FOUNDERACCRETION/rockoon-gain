@@ -280,8 +280,47 @@ def fly2d(m0, mp, area, thrust, tb, cd_fn, elev_deg, z0=0.0, m2=None, area2=None
     return out
 
 
+def fly_tilted(m0, mp, d, mdot, isp_vac, Ae, z0, tilt_deg, mode='fixed', rail=10.0, cd_scale=1.0):
+    """Planar flight of the liquid vehicle ignited at an angle tilt_deg from the vertical.
+
+    mode 'fixed': the thrust keeps its initial direction (a spin-stabilised or attitude-held vehicle,
+    the relevant case where there is no air to turn the body). mode 'turn': the thrust follows the
+    velocity after the first `rail` metres of travel (gravity turn, aerodynamically stable vehicle).
+    """
+    A = math.pi * d * d / 4.0
+    tb = mp / mdot
+    th = math.radians(90.0 - tilt_deg)
+    ux, uz = math.cos(th), math.sin(th)
+
+    def rhs(t, y, burning):
+        x, z, vx, vz, m, s = y
+        v = math.hypot(vx, vz)
+        T, p, rho = atmosphere(z)
+        g = G0 * (R_EARTH / (R_EARTH + z)) ** 2
+        D = 0.5 * rho * v * v * cd_scale * cd_generic(v / math.sqrt(1.4 * RSTAR / M_AIR * T)) * A if v > 0 else 0.0
+        F = (mdot * G0 * isp_vac - p * Ae) if burning else 0.0
+        if mode == 'fixed' or s < rail or v < 1e-6:
+            tx, tz = ux, uz
+        else:
+            tx, tz = vx / v, vz / v
+        dx, dz = (vx / v, vz / v) if v > 1e-9 else (0.0, 0.0)
+        ax = (F * tx - D * dx) / m
+        az = (F * tz - D * dz) / m - g
+        if s < rail and mode == 'turn':            # on the rail: motion constrained to the rail direction
+            a_r = ax * ux + az * uz
+            ax, az = a_r * ux, a_r * uz
+        return [vx, vz, ax, az, -mdot if burning else 0.0, v]
+
+    s1 = solve_ivp(lambda t, y: rhs(t, y, True), [0.0, tb], [0.0, z0, 0.0, 0.0, m0, 0.0], rtol=1e-8, atol=1e-8, max_step=0.5)
+    ev = lambda t, y: y[3]
+    ev.terminal = True
+    ev.direction = -1
+    s2 = solve_ivp(lambda t, y: rhs(t, y, False), [tb, tb + 5000.0], s1.y[:, -1], rtol=1e-8, atol=1e-8, events=ev)
+    return dict(apogee=s2.y[1, -1], range=s2.y[0, -1], v_b=math.hypot(s1.y[2, -1], s1.y[3, -1]))
+
+
 def fly(m0, mp, d, mdot, isp_vac, Ae, z_kin=0.0, z_drag=None, z_noz=None, v0=0.0,
-        cd_scale=1.0, elev_deg=90.0, drag=True, coast=True, trace=False, cd_fn=None):
+        cd_scale=1.0, elev_deg=90.0, drag=True, coast=True, trace=False, cd_fn=None, rtol=1e-8):
     """Point-mass flight along a straight line of elevation elev_deg.
 
     Altitude is z_kin + h. Drag is evaluated in the atmosphere at z_drag + h and the nozzle
@@ -309,7 +348,7 @@ def fly(m0, mp, d, mdot, isp_vac, Ae, z_kin=0.0, z_drag=None, z_noz=None, v0=0.0
         return [v * se, -D / m - g, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     y0 = [0.0, v0, m0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    s1 = solve_ivp(lambda t, y: rhs(t, y, True), [0.0, tb], y0, rtol=1e-8, atol=1e-8,
+    s1 = solve_ivp(lambda t, y: rhs(t, y, True), [0.0, tb], y0, rtol=rtol, atol=rtol,
                    dense_output=True)
     yb = s1.y[:, -1]
     ts = np.linspace(0.0, tb, 400)
@@ -323,7 +362,7 @@ def fly(m0, mp, d, mdot, isp_vac, Ae, z_kin=0.0, z_drag=None, z_noz=None, v0=0.0
         ev = lambda t, y: y[1]
         ev.terminal = True
         ev.direction = -1
-        s2 = solve_ivp(lambda t, y: rhs(t, y, False), [tb, tb + 5000.0], yb, rtol=1e-8, atol=1e-8,
+        s2 = solve_ivp(lambda t, y: rhs(t, y, False), [tb, tb + 5000.0], yb, rtol=rtol, atol=rtol,
                        events=ev, dense_output=True)
         out['apogee'] = z_kin + s2.y[0, -1]
         out['t_apogee'] = s2.t[-1]

@@ -337,6 +337,24 @@ def main():
     for k in ('head', 'drag', 'nozzle'):
         put('acF' + k.title(), 100 * alt['f_' + k], '{:.0f}')
     put('acBalChange', 100 * (alt['balloon'] / base['balloon'] - 1), '{:+.1f}'); put('acGndChange', 100 * (alt['ground'] / base['ground'] - 1), '{:+.0f}')
+    # ---- non-vertical ignition (planar model)
+    tilt = []
+    nb = rm.Nozzle(30e3, 4 * M0 * rm.G0, 0.40); ng = rm.Nozzle(0.0, 4 * M0 * rm.G0, 0.40)
+    for a_ in (0, 5, 10, 15, 20, 30):
+        bf = rm.fly_tilted(M0, MP, 0.40, nb.mdot, nb.isp_vac, nb.Ae, 30e3, a_, 'fixed')
+        bt = rm.fly_tilted(M0, MP, 0.40, nb.mdot, nb.isp_vac, nb.Ae, 30e3, a_, 'turn')
+        gt = rm.fly_tilted(M0, MP, 0.40, ng.mdot, ng.isp_vac, ng.Ae, 0.0, a_, 'turn')
+        tilt.append(dict(tilt=a_, bal_fixed=bf['apogee'] / 1e3, bal_fixed_range=bf['range'] / 1e3, bal_turn=bt['apogee'] / 1e3,
+                         bal_turn_range=bt['range'] / 1e3, gnd_turn=gt['apogee'] / 1e3, gnd_range=gt['range'] / 1e3))
+    RES['tilt'] = tilt
+    put('tiltCheck', tilt[0]['bal_fixed'], '{:.0f}')
+    for row, tag in ((tilt[1], 'Five'), (tilt[2], 'Ten'), (tilt[4], 'Twenty')):
+        put('tiltFixed' + tag, row['bal_fixed'], '{:.0f}'); put('tiltTurn' + tag, row['bal_turn'], '{:.0f}'); put('tiltGnd' + tag, row['gnd_turn'], '{:.0f}')
+        put('tiltFixedLoss' + tag, 100 * (1 - row['bal_fixed'] / tilt[0]['bal_fixed']), '{:.0f}'); put('tiltTurnLoss' + tag, 100 * (1 - row['bal_turn'] / tilt[0]['bal_turn']), '{:.0f}')
+        put('tiltGndLoss' + tag, 100 * (1 - row['gnd_turn'] / tilt[0]['gnd_turn']), '{:.0f}')
+        put('tiltRatio' + tag, row['bal_fixed'] / row['gnd_turn'], '{:.1f}'); put('tiltRange' + tag, row['bal_fixed_range'], '{:.0f}')
+    with open(os.path.join(ROOT, 'paper', 'tab_tilt.tex'), 'w') as f:
+        f.write('\n'.join('%d & %.0f & %.0f & %.0f & %.0f & %.0f & %.1f \\\\' % (r['tilt'], r['bal_fixed'], r['bal_fixed_range'], r['bal_turn'], r['bal_turn_range'], r['gnd_turn'], r['bal_fixed'] / r['gnd_turn']) for r in tilt) + '\n')
     # ---- similarity study (results/similarity.json, written by similarity.py)
     S = json.load(open(os.path.join(ROOT, 'results', 'similarity.json')))
     E = S['ensemble']
@@ -363,6 +381,24 @@ def main():
         rows.append('%s & %.2f & %.1f\\,%s & %.2f & %.1f\\,%s & %.2f & %.1f\\,%s \\\\' % (lab, r1[0], scale * r1[1], unit, r2[0], scale * r2[1], unit, r3[0], scale * r3[1], unit))
     with open(os.path.join(ROOT, 'paper', 'tab_collapse.tex'), 'w') as f:
         f.write('\n'.join(rows) + '\n')
+    # out-of-sample check of the fits: five-fold cross-validation
+    def cv(Xf, y, k=5):
+        X = np.column_stack([np.ones(len(y))] + Xf())
+        idx = np.random.default_rng(11).permutation(len(y)); pred = np.empty(len(y))
+        for f_ in range(k):
+            te = idx[f_::k]; tr = np.setdiff1d(idx, te)
+            b_, *_ = np.linalg.lstsq(X[tr], y[tr], rcond=None); pred[te] = X[te] @ b_
+        return 1 - np.var(y - pred) / np.var(y), np.std(y - pred)
+    c1 = cv(one, L(ldf)); c2 = cv(full, g('f_drag')); c3 = cv(full, L(Rr)); c4 = cv(one, g('f_drag'))
+    put('cvLd', c1[0], '{:.2f}'); put('cvSd', c2[0], '{:.2f}'); put('cvSdSd', 100 * c2[1], '{:.1f}'); put('cvR', c3[0], '{:.2f}'); put('cvSdOne', c4[0], '{:.2f}')
+    # numerical convergence of the integrator
+    nzb = rm.Nozzle(30e3, 4 * M0 * rm.G0, 0.40); nzg = rm.Nozzle(0.0, 4 * M0 * rm.G0, 0.40)
+    conv = []
+    for nz_, z_ in ((nzb, 30e3), (nzg, 0.0)):
+        a8 = rm.fly(M0, MP, 0.40, nz_.mdot, nz_.isp_vac, nz_.Ae, z_kin=z_)['apogee']
+        a11 = rm.fly(M0, MP, 0.40, nz_.mdot, nz_.isp_vac, nz_.Ae, z_kin=z_, rtol=1e-11)['apogee']
+        conv.append(abs(a8 - a11))
+    put('convMax', max(conv), '{:.1f}')
     sl = np.polyfit(L(pi0), L(ldf), 1)
     put('ldSlope', sl[0], '{:.2f}'); put('ldCoef', math.exp(sl[1]), '{:.3f}')
     from scipy.stats import spearmanr as sp_
@@ -431,6 +467,9 @@ def main():
         put('sobCd' + tag, max(sb[z]['ST'][0], 0.0), '{:.2f}'); put('sobEta' + tag, sb[z]['ST'][1], '{:.2f}'); put('sobDry' + tag, sb[z]['ST'][3], '{:.2f}')
         put('sobPi' + tag, sb[z]['piz'], '{:.2f}' if sb[z]['piz'] > 0.1 else '{:.3f}')
     TEX['sobN'] = thousands(1024)
+    put('sobCdZeroLo', sb[0]['ST_ci'][0][0], '{:.2f}'); put('sobCdZeroHi', sb[0]['ST_ci'][0][1], '{:.2f}')
+    put('sobCdTenLo', max(sb[10]['ST_ci'][0][0], 0), '{:.2f}'); put('sobCdTenHi', sb[10]['ST_ci'][0][1], '{:.2f}')
+    put('sobCdTwentyHi', sb[20]['ST_ci'][0][1], '{:.3f}')
 
     os.makedirs(os.path.join(ROOT, 'results'), exist_ok=True)
     with open(os.path.join(ROOT, 'results', 'results.json'), 'w') as f:

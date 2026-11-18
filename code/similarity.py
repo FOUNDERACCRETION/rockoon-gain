@@ -91,7 +91,12 @@ def main():
         var = np.var(np.concatenate([fA, fB]))
         S = [float(1.0 - np.mean((fB - y[k, 2 + i]) ** 2) / (2.0 * var)) for i in range(4)]
         ST = [float(np.mean((fA - y[k, 2 + i]) ** 2) / (2.0 * var)) for i in range(4)]
-        sob.append(dict(z=z, S=S, ST=ST, mean=float(np.mean(fA)) / 1e3, sd=float(np.std(fA)) / 1e3,
+        bs = np.random.default_rng(7).integers(0, NS, (300, NS))
+        ci = []
+        for i in range(4):
+            vals = [np.mean((fA[ix] - y[k, 2 + i][ix]) ** 2) / (2.0 * np.var(np.concatenate([fA[ix], fB[ix]]))) for ix in bs]
+            ci.append([float(np.percentile(vals, 2.5)), float(np.percentile(vals, 97.5))])
+        sob.append(dict(z=z, S=S, ST=ST, ST_ci=ci, mean=float(np.mean(fA)) / 1e3, sd=float(np.std(fA)) / 1e3,
                         piz=CD_REF * math.pi * 0.04 * rm.atmosphere(z * 1e3)[1] / (301.27 * rm.G0)))
     os.makedirs(os.path.join(ROOT, 'results'), exist_ok=True)
     with open(os.path.join(ROOT, 'results', 'similarity.json'), 'w') as f:
