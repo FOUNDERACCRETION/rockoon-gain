@@ -1,0 +1,13 @@
+#!/bin/sh
+# Regenerate every number, table and figure, check the paper, and compile it.
+set -e
+cd "$(dirname "$0")/code"
+python rockoon_model.py
+python similarity.py
+python run_analysis.py
+python make_tables.py
+python make_figures.py
+python -m pytest -q test_model.py
+python check_paper.py
+cd ../paper
+latexmk -pdf -interaction=nonstopmode paper.tex

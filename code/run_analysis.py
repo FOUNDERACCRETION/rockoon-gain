@@ -371,9 +371,9 @@ def main():
     import collections
     fam = collections.defaultdict(list)
     for r in S['system']:
-        fam[(r['mat'], r['mfix'], r['target'])].append(r)
+        fam[(r['mat'], r['mfix'], r['target'], r['sigma'], r['gf'])].append(r)
     opt = []
-    for (mat, mfix, tgt), v in sorted(fam.items()):
+    for (mat, mfix, tgt, sg_, gf_), v in sorted(fam.items()):
         v = sorted(v, key=lambda r: r['z'])
         if any(r['m0'] is None for r in v):
             continue
@@ -386,10 +386,17 @@ def main():
         above = [zz for zz, tt in zip(z[1:], tot[1:]) if tt > tot[0]]
         within = z[1:][tot[1:] <= 1.05 * tot[i]]
         A = math.pi * v[0]['d'] ** 2 / 4
-        opt.append(dict(mat=mat, mfix=mfix, target=tgt / 1e3, ground=float(tot[0]), zstar=float(zst), total=tst, rocket=v[i]['m0'], V=v[i]['V'],
+        opt.append(dict(mat=mat, mfix=mfix, target=tgt / 1e3, sigma=sg_, gf=gf_, ground=float(tot[0]), zstar=float(zst), total=tst, rocket=v[i]['m0'], V=v[i]['V'],
                         pi0=CDREF * A * 101325.0 / (v[0]['m0'] * rm.G0), lo=float(within.min()), hi=float(within.max()),
                         breakeven=float(min(above)) if above else None, curve=[z.tolist(), (tot / tot[0]).tolist()]))
+    var = [o for o in opt if (o['sigma'], o['gf']) != (0.030, 0.10)]
+    opt = [o for o in opt if (o['sigma'], o['gf']) == (0.030, 0.10)]
     RES['optimum'] = opt
+    RES['optimum_var'] = var
+    put('zsVarLo', min(o['zstar'] for o in var), '{:.0f}'); put('zsVarHi', max(o['zstar'] for o in var), '{:.0f}')
+    for sg_, gf_, tag in ((0.020, 0.10, 'SigLo'), (0.040, 0.10, 'SigHi'), (0.030, 0.05, 'GonLo'), (0.030, 0.20, 'GonHi')):
+        o = [x for x in var if x['sigma'] == sg_ and x['gf'] == gf_ and x['mfix'] == 80.0][0]
+        put('zs' + tag, o['zstar'], '{:.1f}'); put('zs' + tag + 'Save', 100 * (1 - o['total'] / o['ground']), '{:.0f}')
     o100 = [o for o in opt if o['target'] == 100.0]
     put('zsLo', min(o['zstar'] for o in o100), '{:.0f}'); put('zsHi', max(o['zstar'] for o in o100), '{:.0f}')
     put('zsAllLo', min(o['zstar'] for o in opt), '{:.0f}'); put('zsAllHi', max(o['zstar'] for o in opt), '{:.0f}')

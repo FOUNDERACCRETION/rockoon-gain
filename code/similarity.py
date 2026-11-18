@@ -33,15 +33,15 @@ def one_vehicle(a):
 
 
 def system_point(a):
-    mat, mfix, z, target = a
+    mat, mfix, z, target, sigma, gf = a
     f = rm.feed_fraction(mat)
     r = rm.close_vehicle(z * 1e3, mfix, f, target=target)
     if r is None:
-        return dict(mat=mat, mfix=mfix, z=z, target=target, m0=None)
-    out = dict(mat=mat, mfix=mfix, z=z, target=target, m0=r['m0'], mp=r['mp'], d=r['d'])
+        return dict(mat=mat, mfix=mfix, z=z, target=target, sigma=sigma, gf=gf, m0=None)
+    out = dict(mat=mat, mfix=mfix, z=z, target=target, sigma=sigma, gf=gf, m0=r['m0'], mp=r['mp'], d=r['d'])
     if z > 0:
-        V, me, mg = rm.balloon(1.1 * r['m0'], z * 1e3)
-        out.update(V=V, env=me, gas=mg, total=1.1 * r['m0'] + me + 1.1 * mg)
+        V, me, mg = rm.balloon((1.0 + gf) * r['m0'], z * 1e3, sigma=sigma)
+        out.update(V=V, env=me, gas=mg, total=(1.0 + gf) * r['m0'] + me + 1.1 * mg)
     else:
         out.update(V=0.0, env=0.0, gas=0.0, total=r['m0'])
     return out
@@ -64,7 +64,11 @@ def main():
             for z in (0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35, 37.5, 40) for tgt in (100e3,)]
     grid += [('Al6061T6', mfix, z, tgt) for mfix in (20.0, 80.0, 320.0) for z in (0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35, 37.5, 40)
              for tgt in (60e3, 150e3)]
-    # Sobol: Saltelli pick-freeze, 4 inputs
+    grid = [g_ + (0.030, 0.10) for g_ in grid]
+    ZG = (0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 32.5, 35, 37.5, 40)
+    grid += [('Al6061T6', mfix, z, 100e3, sg, gf) for mfix in (20.0, 80.0, 320.0) for z in ZG
+             for sg, gf in ((0.020, 0.10), (0.040, 0.10), (0.030, 0.05), (0.030, 0.20))]
+    # Sobol: Jansen estimators, 4 inputs
     NS = 1024
 
     def draw(n):
