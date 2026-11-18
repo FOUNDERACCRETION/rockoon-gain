@@ -9,7 +9,7 @@ Every entry must reach "checked by an author against the original" before upload
 
 | Key | Status | What it is cited for | Still to do |
 |---|---|---|---|
-| ludwig2004 | OPENED (machine-read PDF) | 28 Aug 1952 flight: fired 38,000 ft, summit about 200,000 ft (p. 8); cost < USD 1800 vs about USD 25,000 Aerobee (p. 7); Deacons fired beneath the balloon | Read pp. 7-8 yourself. The PDF does not describe the firing geometry in the passage read; confirm the "fired from beneath the balloon" sentence or cut it |
+| ludwig2004 | OPENED (machine-read PDF) | 28 Aug 1952 flight: fired 38,000 ft, summit about 200,000 ft (p. 8); cost < USD 1800 vs about USD 25,000 Aerobee (p. 7) | Read pp. 7-8 yourself |
 | watson1949 | OPENED (OCR text, garbled in places) | Table I gross weights, impulses, max velocities for rounds 2-9; 70 deg launch; 6.75 in drag diameter; max velocity at 2.9 s (round 6); propellant about 103 lb; rounds 8-9 at lower grain temperature | **Check every Table I number against the scanned page.** Propellant weight and grain temperatures were only partly legible |
 | okninski2016 | RECORD | Solid-propellant rockoon to 100 km; light vehicles benefit most | Read the paper; confirm the "light vehicles benefit most" attribution and the author name spellings |
 | li2022 | RECORD (publisher page blocked) | Multi-stage rockoon optimisation for orbit | Confirm authors, volume, pages on the SAGE page |
