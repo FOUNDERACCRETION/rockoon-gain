@@ -5,3 +5,5 @@ __pycache__/
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+arxiv_submission.tar.gz
+.pytest_cache/
