@@ -128,6 +128,30 @@ def main():
     aps = [deacon(w, 19680, 1.0, z0=z_fire, elev=90.0, coast=True)['apogee'] / 1e3 for w in (190.50, 232.65)]
     put('suiApLight', aps[0], '{:.0f}'); put('suiApHeavy', aps[1], '{:.0f}')
     put('nacaMassLo', 190.50 * LB, '{:.0f}'); put('nacaMassHi', 232.65 * LB, '{:.0f}')
+    # Deacon rockoon firings of 1952-53 (NRL Report 4276, data sheets): launch altitude and zenith, statute miles
+    SUI = [('SUI-3', 7.2, 37.9), ('SUI-4', 6.6, 36.9), ('SUI-7', 8.1, 39.8), ('SUI-13', 10.8, 54.8), ('SUI-15', 8.5, 40.7), ('SUI-23', 12.2, 61.6)]
+    NRLF = [('NRL-1', 15.7, 49.2), ('NRL-4', 14.2, 50.2), ('NRL-5', 14.0, 41.7)]
+    def rk_ap(m, zmi, cd=1.0):
+        return deacon(m / LB, 19680, cd, z0=zmi * MI, elev=90.0, coast=True)['apogee'] / 1e3
+    def rk_rms(m, D, cd=1.0):
+        return math.sqrt(np.mean([(rk_ap(m, a_, cd) / (b_ * MI / 1e3) - 1) ** 2 for _, a_, b_ in D]))
+    rk = {}
+    for tag, D, cd in (('Sui', SUI, 1.0), ('Nrl', NRLF, 1.0), ('Early', SUI[:3], 1.0), ('SuiCd', SUI, 2.0)):
+        r_ = minimize_scalar(lambda m: rk_rms(m, D, cd), bounds=(70.0, 160.0), method='bounded')
+        rk[tag] = r_.x
+        put('rk' + tag + 'Mass', r_.x, '{:.0f}'); put('rk' + tag + 'Rms', 100 * r_.fun, '{:.1f}')
+    rows = []
+    for grp, D, m_ in (('SUI', SUI, rk['Sui']), ('NRL', NRLF, rk['Nrl'])):
+        for nm, a_, b_ in D:
+            mod = rk_ap(m_, a_)
+            rows.append(dict(name=nm, grp=grp, fire=a_ * MI / 1e3, obs=b_ * MI / 1e3, model=mod, err=100 * (mod / (b_ * MI / 1e3) - 1)))
+    RES['rockoons'] = rows; RES['rockoon_mass'] = rk
+    put('rkN', len(rows), '{:d}'); put('rkFireLo', min(r['fire'] for r in rows), '{:.0f}'); put('rkFireHi', max(r['fire'] for r in rows), '{:.0f}')
+    put('rkObsLo', min(r['obs'] for r in rows), '{:.0f}'); put('rkObsHi', max(r['obs'] for r in rows), '{:.0f}')
+    put('rkWorst', min(r['err'] for r in rows), '{:+.0f}'); put('rkBest', max(r['err'] for r in rows), '{:+.0f}')
+    put('rkAllRms', 100 * math.sqrt(np.mean([(r['err'] / 100) ** 2 for r in rows])), '{:.0f}')
+    with open(os.path.join(ROOT, 'paper', 'tab_rockoons.tex'), 'w') as f_:
+        f_.write('\n'.join('%s & %.1f & %.1f & %.1f & $%+.0f$ \\\\' % (r['name'], r['fire'], r['obs'], r['model'], r['err']) for r in rows) + '\n')
     gnd = [deacon(w, 19680, 1.0, z0=0.0, elev=90.0, coast=True)['apogee'] / 1e3 for w in (190.50, 232.65)]
     put('deaGroundLight', gnd[0], '{:.0f}'); put('deaGroundHeavy', gnd[1], '{:.0f}')
     # ---- baseline

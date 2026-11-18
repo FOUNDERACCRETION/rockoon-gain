@@ -65,6 +65,9 @@ def external():
     for n, w, v, I in rounds:
         r = rm.fly(w * LB, mp_d, d_d, mp_d / 2.9, I * LBF / (mp_d * rm.G0), 0.0, elev_deg=70.0, coast=False)
         check(g, 'Deacon round %d maximum velocity (NACA RM L8H26)' % n, r['v_max'], v * FT, 0.03, 'm/s')
+    for nm, zmi, obs in (('SUI-3', 7.2, 37.9), ('SUI-4', 6.6, 36.9), ('SUI-7', 8.1, 39.8)):
+        rr = rm.fly(105.0, mp_d, d_d, mp_d / 2.9, 19680 * LBF / (mp_d * rm.G0), 0.0, z_kin=zmi * 1609.344)
+        check(g, 'Deacon rockoon %s zenith, 105 kg (NRL Report 4276)' % nm, rr['apogee'], obs * 1609.344, 0.05, 'm')
     r = rm.fly2d(28.32, 16.87, 85.47e-4, 4450 * LBF, 2.0, rm.cd_superloki, 80.0, m2=6.12, area2=9.84e-4, cd_fn2=rm.cd_dart)
     check(g, 'Super Loki burnout velocity (NASA CR-61238)', r['v_b'], 5893 * FT, 0.05, 'm/s')
     check(g, 'Super Loki apogee (NASA CR-61238 trajectory)', r['apogee'], 113.4e3, 0.08, 'm')

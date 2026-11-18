@@ -62,18 +62,16 @@ def fig_validation():
     ax[0].set_xlabel('Measured maximum velocity (m s$^{-1}$)'); ax[0].set_ylabel('Computed maximum velocity (m s$^{-1}$)'); ax[0].legend(loc='lower right', fontsize=6.5)
     LB = 0.45359237
     mp_d, d_d = 103.0 * LB, 6.75 * 0.0254
-    ms = np.linspace(80, 115, 36)
-    def ap(m, cd):
-        return rm.fly(m, mp_d, d_d, mp_d / 2.9, 19680 * 4.4482216 / (mp_d * rm.G0), 0.0, z_kin=38000 * 0.3048, cd_scale=cd)['apogee'] / 1e3
-    lo = [ap(m, 1.2) for m in ms]; hi = [ap(m, 0.8) for m in ms]; mid = [ap(m, 1.0) for m in ms]
-    ax[1].axvspan(R['nacaMassLo'], R['nacaMassHi'], color='0.92', lw=0)
-    ax[1].fill_between(ms, lo, hi, color=BLUE, alpha=0.18, lw=0)
-    ax[1].plot(ms, mid, color=BLUE)
-    ax[1].axhline(R['suiTop'], color=ORANGE, lw=1.0)
-    ax[1].text(81, R['suiTop'] + 1.5, 'reported summit, about 61 km', color=ORANGE, fontsize=7)
-    ax[1].text(0.5 * (R['nacaMassLo'] + R['nacaMassHi']), 108, 'gross masses of the\nNACA ground rounds', ha='center', va='top', fontsize=7, color=GREY)
-    ax[1].set_xlim(80, 115); ax[1].set_ylim(40, 105)
-    ax[1].set_xlabel('Gross mass at ignition (kg)'); ax[1].set_ylabel('Computed apogee (km)')
+    def ap(m, zkm, cd=1.0):
+        return rm.fly(m, mp_d, d_d, mp_d / 2.9, 19680 * 4.4482216 / (mp_d * rm.G0), 0.0, z_kin=zkm * 1e3, cd_scale=cd)['apogee'] / 1e3
+    zz = np.linspace(8, 27, 20)
+    for grp, col, mk, key in (('SUI', BLUE, 'o', 'Sui'), ('NRL', ORANGE, 's', 'Nrl')):
+        m_ = R['rockoon_mass'][key]
+        ax[1].fill_between(zz, [ap(m_, z, 1.2) for z in zz], [ap(m_, z, 0.8) for z in zz], color=col, alpha=0.15, lw=0)
+        ax[1].plot(zz, [ap(m_, z) for z in zz], color=col, lw=1.1, label='model, %.0f kg' % m_)
+        pts = [r for r in R['rockoons'] if r['grp'] == grp]
+        ax[1].plot([r['fire'] for r in pts], [r['obs'] for r in pts], mk, color=col, ms=4.5, mfc='w', mew=1.2, label='%s flights' % ('Iowa' if grp == 'SUI' else 'NRL'))
+    ax[1].set_xlabel('Firing altitude (km)'); ax[1].set_ylabel('Apogee (km)'); ax[1].set_ylim(40, 110); ax[1].legend(loc='upper left', fontsize=6.3, ncol=2, columnspacing=0.8)
     panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_validation')
 
 

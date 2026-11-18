@@ -44,6 +44,7 @@ okninski2016 additionally supports two statements taken from the research pass, 
 | janhunen2018 | RECORD + research pass (full text) | 18 km chosen qualitatively for a steam-balloon launcher | Confirm authors and that it is cited as an arXiv preprint only |
 | nasaldb | OPENED (machine-read PDF) | NASA 29.47 and 59.84 MCF balloons: 3600 lb and 2751 lb, 0.8 and 0.4 mil film | Document carries no number; title taken from its heading. Confirm |
 | nist (helium) | OPENED | Helium density 43.571 kg/m3 at 290 K, 30 MPa | none |
+| smith1954 | OPENED (machine-read scan of NRL Report 4276 on DTIC; Deacon section and data sheets) | Firing altitude and zenith of nine Deacon rockoon flights (SUI-3, 4, 7, 13, 15, 23; NRL-1, 4, 5); nominal payload 50 lb | **Check all nine pairs against the scanned data sheets.** Several other sheets were garbled or had uncertain designations and were left out; the SUI-5/SUI-6 sheets conflict with the summary table. Confirm author and report number on the title page |
 
 Corrections applied on 18 Nov 2026 from the second research pass: Sarigul-Klijn pages 569-575; 6061-T6 276 MPa relabelled as typical; Van Allen & Gottlieb pages added. **arXiv endorsement: physics subject classes are separate endorsement domains, so a physics.gen-ph endorsement does not cover physics.app-ph.**
 
