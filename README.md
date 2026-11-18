@@ -3,6 +3,14 @@
 Code and manuscript for "What governs the rockoon advantage? An atmospheric-column similarity parameter, an attribution
 of the apogee gain, and the optimum float altitude for balloon-launched sounding rockets" (Ramnani, Aduru, Reddy, 2026).
 
+## Check validity
+
+    python validate.py           # 27 checks in about 20 seconds: physics identities, published reference
+                                 # values (NACA Deacon, NASA Super Loki, propellant benchmark), headline
+                                 # results against results.json, unit tests, paper consistency
+    python validate.py --full    # also regenerates every result in a temporary copy and compares
+                                 # the generated LaTeX files byte for byte (about 8 minutes)
+
 ## Reproduce everything
 
 One command (about 10 minutes on 4 cores):
