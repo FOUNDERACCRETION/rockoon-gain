@@ -501,7 +501,7 @@ The authors used Claude (Anthropic), a generative AI model, in preparing this wo
 
 \section*{Code and data availability}
 
-\sloppy The scripts \texttt{rockoon\_model.py} (models), \texttt{similarity.py} (ensemble, optimum altitude and Sobol runs), \texttt{run\_analysis.py} (all numbers), \texttt{make\_tables.py}, \texttt{make\_figures.py} and \texttt{check\_paper.py} are provided with this submission. They require Python 3.10 or later with NumPy, SciPy, Matplotlib and Cantera 3.2.0. Every number in the text that is computed is read from \texttt{results.tex}, which \texttt{run\_analysis.py} writes.
+\sloppy The scripts \texttt{rockoon\_model.py} (models), \texttt{similarity.py} (ensemble, optimum altitude and Sobol runs), \texttt{run\_analysis.py} (all numbers), \texttt{make\_tables.py}, \texttt{make\_figures.py} and \texttt{check\_paper.py} are provided with this submission. They require Python 3.10 or later with NumPy, SciPy, Matplotlib and Cantera 3.2.0. Every number in the text that is computed is read from \texttt{results.tex}, which \texttt{run\_analysis.py} writes. A single script, \texttt{run\_all.sh}, regenerates everything; a rebuild from a fresh copy with all generated files deleted reproduced \texttt{results.tex} byte for byte. The file \texttt{test\_model.py} contains eight checks of the model against values that can be worked out by hand.
 
 \appendix
 

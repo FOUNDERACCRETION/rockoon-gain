@@ -5,6 +5,18 @@ of the apogee gain, and the optimum float altitude for balloon-launched sounding
 
 ## Reproduce everything
 
+One command (about 10 minutes on 4 cores):
+
+    pip install -r requirements.txt
+    ./run_all.sh
+
+On 18 Nov 2026 a fresh clone with every generated file deleted was rebuilt this way and gave a
+`paper/results.tex` byte-identical to the committed one. `code/test_model.py` holds eight checks
+against values that can be worked out by hand (sea-level atmosphere, column mass = p/g, buoyancy
+balance, rocket equation in vacuum, energy conservation on the coast, attribution sums to the gain).
+
+Step by step:
+
 Requires Python 3.10+ and a LaTeX installation.
 
     pip install numpy scipy matplotlib cantera==3.2.0
