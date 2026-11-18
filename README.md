@@ -5,11 +5,11 @@ of the apogee gain, and the optimum float altitude for balloon-launched sounding
 
 ## Check validity
 
-    python validate.py           # 27 checks in about 20 seconds: physics identities, published reference
+    python validate.py           # 29 checks in about 20 seconds: physics identities, published reference
                                  # values (NACA Deacon, NASA Super Loki, propellant benchmark), headline
                                  # results against results.json, unit tests, paper consistency
     python validate.py --full    # also regenerates every result in a temporary copy and compares
-                                 # the generated LaTeX files byte for byte (about 8 minutes)
+                                 # the generated LaTeX files byte for byte (about 9 minutes; 40 checks)
 
 ## Reproduce everything
 
