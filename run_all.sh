@@ -4,6 +4,7 @@ set -e
 cd "$(dirname "$0")/code"
 python rockoon_model.py
 python similarity.py
+python extra_tests.py
 python run_analysis.py
 python make_tables.py
 python make_figures.py

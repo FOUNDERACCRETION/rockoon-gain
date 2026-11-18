@@ -120,7 +120,7 @@ def full():
     for sub in ('results', os.path.join('code', 'thermo_table.json'), os.path.join('paper', 'results.tex')):
         pth = os.path.join(dst, sub)
         shutil.rmtree(pth) if os.path.isdir(pth) else os.remove(pth)
-    for script in ('rockoon_model.py', 'similarity.py', 'run_analysis.py', 'make_tables.py'):
+    for script in ('rockoon_model.py', 'similarity.py', 'extra_tests.py', 'run_analysis.py', 'make_tables.py'):
         p = subprocess.run([sys.executable, script], cwd=os.path.join(dst, 'code'), capture_output=True, text=True)
         if p.returncode != 0:
             flag(g, script, False, p.stderr.strip().splitlines()[-1][:60])
@@ -133,7 +133,7 @@ def full():
 def main():
     physics(); external(); headline(); paper()
     if '--full' in sys.argv:
-        print('Regenerating every result in a temporary copy (about 8 minutes)...')
+        print('Regenerating every result in a temporary copy (about 25 minutes)...')
         full()
     last = None
     w = max(len(r[1]) for r in ROWS)

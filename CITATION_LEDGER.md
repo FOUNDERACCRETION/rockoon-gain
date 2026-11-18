@@ -16,7 +16,6 @@ Every entry must reach "checked by an author against the original" before upload
 | jorda2012 | RECORD (IAF listing) | Rockoons for small satellites | Confirm paper code |
 | shoyama2021 | OPENED (MDPI open-access page, 18 Nov) | Crane-suspended rail launcher, CMG azimuth control, three model-rocket launches; contains no analysis of apogee against launch altitude | Open access: each author should read it once |
 | shoyama2026 | OPENED | Balloon launch experiment; elevation oscillation open | Confirm the "open problem" wording against the paper |
-| jones1955 | RECORD (seen in a reference list only) | Existence of an early estimation method; paper states it was not obtained | Obtain and read it before making any novelty claim |
 | traveler | OPENED (mirror copy) | +20 % drag tuning; 339,800 ft apogee | Confirm the URL resolves; the copy read was a mirror |
 | astronautix | RECORD (read by the research pass, not re-opened) | 285 s, 3415 K, 1720 m/s at O/F 2.61 | Open the page; better, replace with a primary table (e.g. Sutton) once checked in print |
 | nioshudmh, nioshno2 | OPENED | Exposure limits, vapour pressure, flash point, flammable range | none |
@@ -47,6 +46,12 @@ okninski2016 additionally supports two statements taken from the research pass, 
 | smith1954 | OPENED (machine-read scan of NRL Report 4276 on DTIC; Deacon section and data sheets) | Firing altitude and zenith of nine Deacon rockoon flights (SUI-3, 4, 7, 13, 15, 23; NRL-1, 4, 5); nominal payload 50 lb | **Check all nine pairs against the scanned data sheets.** Several other sheets were garbled or had uncertain designations and were left out; the SUI-5/SUI-6 sheets conflict with the summary table. Confirm author and report number on the title page |
 | allen1958 | RECORD (NTRS record and report title page seen; summary read) | That the drag group is the parameter of the Allen-Eggers ballistic-entry solution | **Open the report and confirm the form of the parameter before upload** |
 | sutton2017 | CARRIED (not opened) | Over-expanded sea-level nozzles; separation at an exit pressure of roughly 0.4 of ambient | **Confirm the criterion, edition and page in the book, or replace with a source you have read** |
+| bloostar2015 | RECORD (IAF directory abstract page) | Zero 2 Infinity's Bloostar balloon-assisted launcher for microsatellites; first author A. Schoenmaker | **Check the full author list and paper number on the IAF page** |
+| jaxa2026 | OPENED (JAXA press release, 28 May 2026) | AstroX (rockoon launch service) and JAXA joint demonstration of a suspension-type attitude-control device for stratospheric balloons | none |
+| tsien1951 | RECORD (Caltech repository abstract; Scilit metadata) | Classical theory of vertical sounding-rocket performance (optimum thrust programming) | Open the paper before upload |
+| traveler | OPENED (white paper, Sec. IV.1 p. 10) | 6-DOF sim tuned by -0.9% thrust and +20% drag, attributed to damage seen on recovered vehicle | none |
+
+Removed 18 Nov 2026: jones1955 (never obtained; cited only to say so). Removed from the paper to the supplement: varghese1999, jones2018.
 
 Moved to the supplement (supplement/audit_2022.tex) with the audit and regulation text, no longer cited in the paper: varghese1999, jones2018, inspace, bva, peso, msihc. iarc and the two NIOSH entries remain in the paper's safety note.
 

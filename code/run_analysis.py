@@ -1,4 +1,3 @@
-import math
 """Run every calculation in the paper. Writes results/results.json and paper/results.tex."""
 import json, math, os, sys
 from multiprocessing import Pool
@@ -209,6 +208,25 @@ def main():
                     break
                 st[j_] = 1
         put('ord' + nm + 'Lo', min(vals), '{:.0f}'); put('ord' + nm + 'Hi', max(vals), '{:.0f}')
+    # attribution measured in burnout velocity and in burnout energy, from the same eight runs
+    runs8 = {(k, dr, n): rm.vehicle_run(M0, MP, 30e3, switches=(k, dr, n)) for k in (0, 1) for dr in (0, 1) for n in (0, 1)}
+    def shap(metric):
+        w = {0: 1 / 3, 1: 1 / 6, 2: 1 / 3}; phi = [0.0, 0.0, 0.0]
+        for i in range(3):
+            for s_ in runs8:
+                if s_[i] == 0:
+                    t_ = list(s_); t_[i] = 1
+                    phi[i] += w[sum(s_)] * (metric(runs8[tuple(t_)]) - metric(runs8[s_]))
+        return phi
+    pv = shap(lambda r: r['v_b']); tv = sum(pv)
+    put('dvbGain', tv, '{:.0f}')
+    for i, nm in enumerate(('Head', 'Drag', 'Nozzle')):
+        put('dvb' + nm, pv[i], '{:.0f}'); put('dvbF' + nm, 100 * pv[i] / tv, '{:.0f}')
+    rb, rg = runs8[(1, 1, 1)], runs8[(0, 0, 0)]
+    put('budDvThr', rb['dv_thrust'] - rg['dv_thrust'], '{:.0f}'); put('budLd', rg['loss_d'] - rb['loss_d'], '{:.0f}'); put('budLg', rb['loss_g'] - rg['loss_g'], '{:.0f}')
+    # coast approximation: apogee ~ z0 + h_b + v_b^2/(2 g); the derivative v_b/g converts velocity to height
+    put('coastFactor', rb['v_b'] / rm.G0, '{:.0f}'); put('coastFactorGnd', rg['v_b'] / rm.G0, '{:.0f}')
+    put('coastApprox', (30e3 + rb['h_b'] + rb['v_b'] ** 2 / (2 * rm.G0 * (1 + (30e3 + rb['h_b']) / 6.371e6) ** -2)) / 1e3, '{:.0f}')
     fr_ = MP / M0
     put('propFrac', fr_, '{:.3f}')
     RES['dec_alt'] = [dec(M0, MP, z * 1e3) for z in (5, 10, 15, 20, 25, 30, 35, 40)]
@@ -612,13 +630,139 @@ def main():
     jk = [(rm.insulation_mass(r['mp'], 20e3), r) for k_, v in base_fams.items() for r in v if r['z'] == 20.0]
     put('insFracHi', 100 * max(m_[0] / r['m0'] for m_, r in jk), '{:.1f}'); put('insFracLo', 100 * min(m_[0] / r['m0'] for m_, r in jk), '{:.2f}')
     put('insThickReq', 1e3 * max(rm.insulation_mass(r['mp'], 20e3, t_min=0.0)[1] for _, r in jk), '{:.0f}')
+    # fair ground comparator for the mass optimum: each ground vehicle designed for ground launch
+    fair_gnd = {}
+    for (mat, mfix, *_), v in sorted(base_fams.items()):
+        best_ = None
+        for fin in (10.0, 15.0, 20.0):
+            for tw in (2.0, 3.0, 4.0, 5.0, 6.0):
+                for sp_ in (1.0, 0.7):
+                    try:
+                        r = rm.close_vehicle(0.0, mfix, rm.feed_fraction(mat), target=100e3, tw=tw, fineness=fin, sep=sp_)
+                    except ValueError:
+                        r = None
+                    if r and (best_ is None or r['m0'] < best_[0]):
+                        best_ = (r['m0'], fin, tw, sp_)
+        fair_gnd[(mat, mfix)] = best_
+    RES['fair_ground'] = {'%s/%g' % k: list(v) for k, v in fair_gnd.items()}
+    # the balloon-launched vehicles redesigned for their own launch as well (body and thrust)
+    fair_bal = {}
+    for (mat, mfix, *_), v in sorted(base_fams.items()):
+        for r in v:
+            if r['z'] == 0:
+                continue
+            best_ = (r['m0'], 10.0, 4.0)
+            for fin in (10.0, 15.0):
+                for tw in (4.0, 5.0, 6.0):
+                    if (fin, tw) == (10.0, 4.0):
+                        continue
+                    try:
+                        c = rm.close_vehicle(r['z'] * 1e3, mfix, rm.feed_fraction(mat), target=100e3, tw=tw, fineness=fin)
+                    except ValueError:
+                        c = None
+                    if c and c['m0'] < best_[0]:
+                        best_ = (c['m0'], fin, tw)
+            fair_bal[(mat, mfix, r['z'])] = best_
+    RES['fair_balloon'] = {'%s/%g/%g' % k: list(v) for k, v in fair_bal.items()}
+    fair = [dict(mat=o['mat'], mfix=o['mfix'], save=1 - (1 - o['save']) * o['ground'] / fair_gnd[(o['mat'], o['mfix'])][0]) for o in chk]
+    fb = []
+    for (mat, mfix, *_), v in sorted(base_fams.items()):
+        tot = [fair_gnd[(mat, mfix)][0]]
+        for r in v[1:]:
+            ms = 1.10 * fair_bal[(mat, mfix, r['z'])][0]
+            V_, me_, mg_ = rm.balloon(ms, r['z'] * 1e3); tot.append(ms + me_ + 1.1 * mg_)
+        zs_, ts_, g_ = fam_opt(v, tot)
+        fb.append(dict(mat=mat, mfix=mfix, zstar=float(zs_), save=float(1 - ts_ / g_)))
+    RES['optimum_fair_both'] = fb
+    put('fbLo', min(o['zstar'] for o in fb), '{:.0f}'); put('fbHi', max(o['zstar'] for o in fb), '{:.0f}')
+    put('fbSaveLo', 100 * min(o['save'] for o in fb), '{:.0f}'); put('fbSaveHi', 100 * max(o['save'] for o in fb), '{:.0f}')
+    put('fairSaveLo', 100 * min(o['save'] for o in fair), '{:.0f}'); put('fairSaveHi', 100 * max(o['save'] for o in fair), '{:.0f}')
+    put('fairGndRedLo', 100 * min(1 - fair_gnd[(o['mat'], o['mfix'])][0] / o['ground'] for o in chk), '{:.0f}')
+    put('fairGndRedHi', 100 * max(1 - fair_gnd[(o['mat'], o['mfix'])][0] / o['ground'] for o in chk), '{:.0f}')
+    # hardware only the rockoon needs: divergent-section mass (both vehicles), and a heavier gondola
+    # carrying the launcher and attitude-control system
+    def hw_variant(areal=10.0, gf=0.10, k_load=0.0, fair_ground=False):
+        out = []
+        for (mat, mfix, *_), v in sorted(base_fams.items()):
+            f = rm.feed_fraction(mat); tot = []
+            for r in v:
+                kw = {}
+                if r['z'] == 0 and fair_ground:
+                    m0g, fin, tw, sp_ = fair_gnd[(mat, mfix)]; kw = dict(tw=tw, fineness=fin, sep=sp_)
+                elif fair_ground:
+                    _, fin, tw = fair_bal[(mat, mfix, r['z'])]; kw = dict(tw=tw, fineness=fin)
+                c = rm.close_vehicle_skirt(r['z'] * 1e3, mfix, f, target=100e3, areal=areal, **kw) if areal > 0 else rm.close_vehicle(r['z'] * 1e3, mfix, f, target=100e3, **kw)
+                if r['z'] == 0:
+                    tot.append(c['m0']); continue
+                ms = (1.0 + gf) * c['m0']
+                V_, me_, mg_ = rm.balloon(ms, r['z'] * 1e3, k_load=k_load)
+                tot.append(ms + me_ + 1.1 * mg_)
+            zs_, ts_, g_ = fam_opt(v, tot)
+            out.append(dict(mat=mat, mfix=mfix, zstar=float(zs_), save=float(1 - ts_ / g_)))
+        return out
+    for tag, kw in (('Sk', dict(areal=10.0)), ('SkHi', dict(areal=20.0)), ('Gf', dict(areal=0.0, gf=0.30)),
+                    ('All', dict(areal=20.0, gf=0.30, k_load=0.20, fair_ground=True))):
+        vv = hw_variant(**kw); RES['optimum_hw_' + tag] = vv
+        put('hw' + tag + 'Lo', min(o['zstar'] for o in vv), '{:.0f}'); put('hw' + tag + 'Hi', max(o['zstar'] for o in vv), '{:.0f}')
+        put('hw' + tag + 'SaveLo', 100 * min(o['save'] for o in vv), '{:.0f}'); put('hw' + tag + 'SaveHi', 100 * max(o['save'] for o in vv), '{:.0f}')
+    al_ = [o for o in RES['optimum_hw_All'] if o['mat'] == 'Al6061T6']; ss_ = [o for o in RES['optimum_hw_All'] if o['mat'] != 'Al6061T6']
+    put('hwAllAlLo', 100 * min(o['save'] for o in al_), '{:.0f}'); put('hwAllAlHi', 100 * max(o['save'] for o in al_), '{:.0f}')
+    put('hwAllSsLo', 100 * min(o['save'] for o in ss_), '{:.0f}'); put('hwAllSsHi', 100 * max(o['save'] for o in ss_), '{:.0f}')
+    TEX['hwAllAlNeg'] = str(sum(o['save'] < 0 for o in al_))
+    rr_ = rm.vehicle_run(M0, MP, 30e3); sk = rm.nozzle_skirt(rr_['Ae'], rr_['eps'])
+    put('skBaseM', sk[0], '{:.1f}'); put('skBaseL', sk[1], '{:.2f}')
+    gg_ = rm.vehicle_run(M0, MP, 0.0); skg = rm.nozzle_skirt(gg_['Ae'], gg_['eps'])
+    put('skGndM', skg[0], '{:.1f}'); put('skGndL', skg[1], '{:.2f}')
+    # a cost weighting: balloon-system mass (envelope, gas, gondola) priced at r times the rocket per kg
+    for r_c, tag in ((0.3, 'A'), (1.0, 'B'), (3.0, 'C'), (10.0, 'D')):
+        res_ = []
+        for (mat, mfix, *_), v in sorted(base_fams.items()):
+            cost = [r['m0'] if r['z'] == 0 else r['m0'] + r_c * (0.10 * r['m0'] + r['env'] + 1.1 * r['gas']) for r in v]
+            zs_, ts_, g_ = fam_opt(v, cost)
+            res_.append(dict(zstar=float(zs_), save=float(1 - ts_ / g_)))
+        RES['optimum_cost_' + tag] = res_
+        put('cost' + tag + 'Lo', min(o['zstar'] for o in res_), '{:.0f}'); put('cost' + tag + 'Hi', max(o['zstar'] for o in res_), '{:.0f}')
+        put('cost' + tag + 'SaveLo', 100 * min(o['save'] for o in res_), '{:.0f}'); put('cost' + tag + 'SaveHi', 100 * max(o['save'] for o in res_), '{:.0f}')
     b_ = [r for r in base_fams[('Al6061T6', 80.0, 100e3, 0.030, 0.10)] if r['z'] == 17.5][0]
     put('insBase', rm.insulation_mass(b_['mp'], 17.5e3)[0], '{:.1f}')
+
+    # further tests (results/extra.json, written by extra_tests.py)
+    X = json.load(open(os.path.join(ROOT, 'results', 'extra.json')))
+    xs = X['sobol_vehicles']; RES['sobol_vehicles'] = xs
+    vnames = []
+    for x in xs:
+        if x['vehicle'] not in vnames:
+            vnames.append(x['vehicle'])
+    cross_z, cross_pi = [], []
+    for n in vnames:
+        v = [x for x in xs if x['vehicle'] == n]
+        for p_, q_ in zip(v, v[1:]):
+            if p_['ST_cd'] >= 0.01 > q_['ST_cd']:
+                f_ = (math.log(p_['ST_cd']) - math.log(0.01)) / (math.log(p_['ST_cd']) - math.log(max(q_['ST_cd'], 1e-6)))
+                cross_z.append(p_['z'] + f_ * (q_['z'] - p_['z']))
+                cross_pi.append(math.exp(math.log(p_['piz']) + f_ * (math.log(q_['piz']) - math.log(p_['piz']))))
+                break
+    put('h3ZLo', min(cross_z), '{:.0f}'); put('h3ZHi', max(cross_z), '{:.0f}')
+    put('h3PiLo', min(cross_pi), '{:.2f}'); put('h3PiHi', max(cross_pi), '{:.2f}')
+    put('h3PiZeroLo', min(x['pi0'] for x in xs), '{:.1f}'); put('h3PiZeroHi', max(x['pi0'] for x in xs), '{:.1f}')
+    yy = np.array([max(x['ST_cd'], 0) for x in xs])
+    def r2q(xv):
+        c = np.polyfit(xv, yy, 3); r = yy - np.polyval(c, xv); return 1 - r.var() / yy.var()
+    put('h3RPi', r2q(np.log([x['piz'] for x in xs])), '{:.2f}'); put('h3RZ', r2q(np.array([x['z'] for x in xs])), '{:.2f}')
+    put('h3NS', 512, '{:d}')
+    for zf, tag in (('30', 'Thirty'), ('15', 'Fifteen')):
+        E = X['fixed_float'][zf]
+        lp = np.log([e['pi0'] for e in E])
+        for key, nm in (('f_drag', 'Sd'), ('f_noz', 'Sn'), ('f_head', 'Sh')):
+            yv = np.array([e[key] for e in E])
+            Xm = np.column_stack([np.ones(len(yv)), lp, lp ** 2]); b = np.linalg.lstsq(Xm, yv, rcond=None)[0]; r = yv - Xm @ b
+            put('fx' + tag + nm, 1 - r.var() / yv.var(), '{:.2f}'); put('fx' + tag + nm + 'Sd', 100 * r.std(), '{:.1f}')
+        put('fx' + tag + 'N', len(E), '{:d}')
 
     # Sobol
     RES['sobol'] = S['sobol']
     sb = {x['z']: x for x in S['sobol']}
-    for z, tag in ((0, 'Zero'), (5, 'Five'), (10, 'Ten'), (20, 'Twenty'), (30, 'Thirty')):
+    for z, tag in ((0, 'Zero'), (5, 'Five'), (10, 'Ten'), (15, 'Fifteen'), (20, 'Twenty'), (30, 'Thirty')):
         put('sobCd' + tag, max(sb[z]['ST'][0], 0.0), '{:.2f}'); put('sobEta' + tag, sb[z]['ST'][1], '{:.2f}'); put('sobDry' + tag, sb[z]['ST'][3], '{:.2f}')
         put('sobPi' + tag, sb[z]['piz'], '{:.2f}' if sb[z]['piz'] > 0.1 else '{:.3f}')
     TEX['sobN'] = thousands(1024)

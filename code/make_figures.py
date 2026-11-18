@@ -242,14 +242,26 @@ def fig_optimum():
 
 
 def fig_sobol():
-    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.4)); fig.subplots_adjust(wspace=0.33)
+    fig, ax = plt.subplots(1, 3, figsize=(W2, 2.3)); fig.subplots_adjust(wspace=0.45)
     sb = R['sobol']; z = [x['z'] for x in sb]
     for i, c, lab in ((0, BLUE, 'drag scale factor'), (1, ORANGE, 'efficiency $\\eta$'), (3, GREEN, 'dry mass'), (2, PURPLE, 'thrust-to-weight')):
         ax[0].plot(z, [max(x['ST'][i], 0) for x in sb], 'o-', color=c, ms=3, label=lab)
-    ax[0].set_xlabel('Ignition altitude (km)'); ax[0].set_ylabel('Total-effect Sobol index'); ax[0].set_ylim(0, 0.85); ax[0].legend(loc='upper right', fontsize=6.5, ncol=2, columnspacing=0.8)
-    ax[1].semilogx([x['piz'] for x in sb], [max(x['ST'][0], 0) for x in sb], 'o-', color=BLUE, ms=3)
-    ax[1].set_xlabel('$\\Pi_D(z_0)$'); ax[1].set_ylabel('Sobol index of the drag scale factor'); ax[1].set_ylim(0, 0.55)
-    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_sobol')
+    ax[0].set_xlabel('Ignition altitude (km)'); ax[0].set_ylabel('Total-effect Sobol index'); ax[0].set_ylim(0, 0.85); ax[0].legend(loc='upper right', fontsize=6, ncol=1)
+    X = json.load(open(os.path.join(ROOT, 'results', 'extra.json')))['sobol_vehicles']
+    names = []
+    for x in X:
+        if x['vehicle'] not in names:
+            names.append(x['vehicle'])
+    cols = [GREEN, BLUE, PURPLE, ORANGE]
+    for n, c in zip(names, cols):
+        v = [x for x in X if x['vehicle'] == n]
+        ax[1].plot([x['z'] for x in v], [max(x['ST_cd'], 0) for x in v], 'o-', color=c, ms=3, label=n)
+        ax[2].semilogx([x['piz'] for x in v], [max(x['ST_cd'], 0) for x in v], 'o-', color=c, ms=3, label=n)
+    ax[1].set_xlabel('Ignition altitude (km)'); ax[1].set_ylabel('Index of the drag scale factor'); ax[1].legend(loc='upper right', fontsize=6)
+    ax[2].set_xlabel('$\\Pi_D(z_0)$'); ax[2].set_ylabel('Index of the drag scale factor')
+    for a in ax[1:]:
+        a.set_ylim(0, 0.75)
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); panel(ax[2], '(c)'); save(fig, 'fig_sobol')
 
 
 if __name__ == '__main__':

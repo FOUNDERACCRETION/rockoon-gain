@@ -67,10 +67,11 @@
 \section*{Introduction}
 \begin{notes}
 \item Target length: about 900 words. NHSJS asks for these parts in order: background and context; problem statement and rationale; significance and purpose; objectives; scope and limitations; theoretical framework; methodology overview.
-\item Background: Van Allen's rockoons of 1952--53 \cite{ludwig2004,corliss1971,vanallen1959}; recent studies \cite{okninski2016,li2022,shoyama2022,shoyama2021,shoyama2026,janhunen2018}; air launch to orbit \cite{sarigul2005}. Jones (1955) \cite{jones1955} not obtained: read it or drop it.
+\item Background: Van Allen's rockoons of 1952--53 \cite{ludwig2004,corliss1971,vanallen1959}; recent studies \cite{okninski2016,li2022,shoyama2022,shoyama2021,shoyama2026,janhunen2018}; air launch to orbit \cite{sarigul2005}.
 \item Gap: none of these splits the gain into causes, and those that optimise altitude do not count the balloon's mass \cite{okninski2016}.
 \item Objectives, as three hypotheses. H1: the drag group $\Pi_D$ alone orders the benefit. H2: a mass-optimal float altitude exists. H3: the drag coefficient stops mattering above some altitude.
 \item Theoretical framework: $\Pi_D=C_DA\,p(z_0)/(m_0g_0)$ is the ballistic parameter of Allen and Eggers \cite{allen1958}; it is not new.
+\item Commercial work: Bloostar \cite{bloostar2015}; AstroX--JAXA attitude-control demonstration \cite{jaxa2026}. Classical theory: Tsien and Evans \cite{tsien1951}.
 \item Scope: vertical point-mass flight, one propellant, no cost model, no experiment.
 \end{notes}
 
@@ -204,6 +205,8 @@ Tanks & $m_{\mathrm{fix}}$ & Ground-launched & $z^{*}$ & $z_g$ & Launched mass &
 \end{table}
 
 \begin{notes}
+\item Fair comparator: saving \R{fbSaveLo}--\R{fbSaveHi}\% with both vehicles designed for their own launch; with every penalty, aluminium families \R{hwAllAlLo} to \R{hwAllAlHi}\%, steel \R{hwAllSsLo}--\R{hwAllSsHi}\%.
+\item H3 on four vehicles: index below 0.01 at $\Pi_D(z_0)$ \R{h3PiLo}--\R{h3PiHi}, altitudes \R{h3ZLo}--\R{h3ZHi}\,km.
 \item H3: total-effect index of the drag scale factor \R{sobCdZero} at the ground, \R{sobCdTen} at 10\,km, zero above 15\,km. Monte Carlo: balloon \R{mcBalMed}\,km, ground \R{mcGndMed}\,km (medians).
 \item Robustness: fair comparator \R{optRatio}; best over-expanded ground nozzle \R{sepRatio}; build-up drag \R{buRatio}.
 \end{notes}

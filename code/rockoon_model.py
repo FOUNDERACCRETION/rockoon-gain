@@ -489,10 +489,10 @@ def diameter(m0, d_ref=0.40, m_ref=301.27, fineness=10.0):
     return d_ref * (m0 / m_ref) ** (1.0 / 3.0) * (10.0 / fineness) ** (1.0 / 3.0)
 
 
-def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle', cd_fn=None, sep=1.0):
+def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle', cd_fn=None, sep=1.0, fineness=10.0):
     """Design the nozzle for the ignition altitude and fly. switches = (kin, drag, nozzle) booleans
     selecting the balloon (True) or ground (False) environment for each effect."""
-    d = diameter(m0) if d is None else d
+    d = diameter(m0, fineness=fineness) if d is None else d
     F = tw * m0 * G0
     if switches is None:
         nz = Nozzle(z_ign, F, d, eta, key, sep)
@@ -550,6 +550,34 @@ def feed_fraction(material, p_tank=3.0e6, of=2.4, geom=1.5, p_bottle=30e6):
     ft = tank_fraction(p_tank, of, rho_m, sy)
     m_he, m_b, _ = pressurant(p_tank, of, p_bottle, 1.2 * p_tank, 2700.0, 276e6)
     return geom * ft + m_he + m_b
+
+
+def nozzle_skirt(Ae, eps, half_angle=15.0, areal=10.0):
+    """Mass (kg) and length (m) of a conical divergent section from throat to exit.
+
+    areal is the wall mass per unit area in kg/m^2 (10 kg/m^2 is about 1.3 mm of steel); it is an
+    assumption, varied in the paper."""
+    re_ = math.sqrt(Ae / math.pi)
+    rt = re_ / math.sqrt(eps)
+    a = math.radians(half_angle)
+    L = (re_ - rt) / math.tan(a)
+    return areal * math.pi * (re_ + rt) * L / math.cos(a), L
+
+
+def close_vehicle_skirt(z_f, m_fix, f_feed, target=100e3, areal=10.0, **kw):
+    """As close_vehicle, with the mass of the divergent nozzle section added to the fixed mass."""
+    extra = 0.0
+    r = None
+    for _ in range(6):
+        r = close_vehicle(z_f, m_fix + extra, f_feed, target=target, **kw)
+        if r is None:
+            return None
+        new = nozzle_skirt(r['Ae'], r['eps'], areal=areal)[0]
+        if abs(new - extra) < 0.01:
+            break
+        extra = new
+    r['skirt'] = extra
+    return r
 
 
 def close_vehicle(z_f, m_fix, f_feed, target=100e3, **kw):
