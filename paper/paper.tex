@@ -1,0 +1,502 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=2pt,topsep=4pt}
+\input{results.tex}
+\makeatletter\newcommand{\tabin}[1]{\@@input #1 }\makeatother
+\newcommand{\R}[1]{\csname res@#1\endcsname}
+\newcommand{\Isp}{I_{\mathrm{sp}}}
+\newcommand{\ms}{\,\mathrm{m\,s^{-1}}}
+\newcommand{\kgm}{\,\mathrm{kg\,m^{-3}}}
+
+\title{\textbf{Where does the rockoon advantage come from? Decomposing the apogee gain of balloon-launched pressure-fed sounding rockets}}
+\author{Aadi Ramnani \and Karthikeya Aduru \and Bala Mysura Sreethan Reddy\\[4pt]
+\small CHIREC International School, Hyderabad, Telangana, India}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent A rockoon is a sounding rocket that a balloon carries into the stratosphere before ignition. It is usually said to gain from lower drag and from a nozzle built for near-vacuum, but we have not found a published account of how much each effect contributes. We build a first-order model of a pressure-fed UDMH/N$_2$O$_4$ sounding rocket (U.S. Standard Atmosphere 1976, equilibrium thermochemistry, a one-dimensional trajectory and a zero-pressure balloon) and check it against eight ground firings of the Deacon rocket and the first successful rockoon flight of 1952. Using eight counterfactual trajectories per vehicle, we split the apogee gain into three parts: drag removed, nozzle expansion, and the altitude head start. For a \R{propFrac} propellant-fraction vehicle of 301\,kg, ignition at 30\,km raises the apogee from \R{gndAp}\,km to \R{balAp}\,km. Of the gain, \R{decFDrag}\% comes from drag, \R{decFNozzle}\% from the nozzle and \R{decFHead}\% from the head start. The drag share falls from \R{decMassFiftyDrag}\% for a 50\,kg vehicle to \R{decMassBigDrag}\% for a 2000\,kg vehicle of the same proportions. Returns diminish quickly with float altitude: from 20 to 30\,km the apogee rises by \R{altGainLow}\,km per kilometre of float altitude while the balloon volume grows \R{altVolRatioLow}-fold. A self-consistent vehicle with 3\,MPa aluminium tanks that reaches 100\,km has a gross mass of \R{cBalM}\,kg when ignited at 30\,km and \R{cGndM}\,kg when launched from the ground. A Monte Carlo study shows that the balloon-launched apogee is almost insensitive to the drag coefficient, which dominates the ground-launched one. The 2022 student proposal that motivated the work is audited in an appendix.
+\end{abstract}
+
+\section{Introduction}
+
+A rockoon is a rocket that is lifted by a balloon and fired in the stratosphere. The technique was first used in 1952 by J.\,A.~Van Allen's group at the State University of Iowa, flying Deacon rockets from the U.S. Coast Guard cutter \emph{Eastwind} \cite{ludwig2004}. The first fully successful flight, on 28 August 1952, fired at 38\,000\,ft and reached about 200\,000\,ft; a rockoon flight then cost less than USD 1800, against about USD 25\,000 for a ground-launched Aerobee \cite{ludwig2004}.
+
+Recent studies have returned to the idea. Okninski, Sors Raurell and Rodriguez Mitre \cite{okninski2016} analysed a small solid-propellant rockoon intended to reach 100\,km. Li \emph{et al.} \cite{li2022} optimised a multi-stage rockoon for orbital launch. Jorda-Siquier \cite{jorda2012} assessed rockoons for small satellites. Shoyama and co-workers \cite{shoyama2021,shoyama2026} built and flew a balloon-suspended rail launcher with azimuth control. An early method for estimating the altitude of balloon-launched rockets was published by Jones in 1955 \cite{jones1955}; we were not able to obtain that paper and do not compare with it.
+
+These studies agree on why a rockoon helps: the rocket avoids most of the drag, and its nozzle can be built for low ambient pressure. What we have not found is a statement of how large each effect is, how the balance changes with the size of the vehicle and the float altitude, or how the result looks for a pressure-fed liquid rocket, whose heavy tanks make the mass budget hard to close. This paper addresses those points. Its questions are:
+\begin{enumerate}
+\item For a pressure-fed storable-propellant sounding rocket, how much of the apogee gain from balloon launch comes from removing drag, how much from the nozzle, and how much from the altitude head start?
+\item How do these shares change with float altitude and with the ballistic parameter of the vehicle?
+\item What does the balloon buy in vehicle mass for a fixed 100\,km target, and what does it cost in balloon volume?
+\end{enumerate}
+
+The work began as a review of Project AKS, a proposal for a balloon-launched UDMH/N$_2$O$_4$ rocket that we wrote in 2022--23 as 13- and 14-year-old students. That proposal was never built. Its vehicle (301\,kg gross, 151\,kg of propellant, ignition near 30\,km) is used here as the baseline case, and an audit of its original calculations is given in Appendix~\ref{app:audit}. The analysis is first-order. It is not a design, and nothing in it suggests that hypergolic propellants are suitable for school or amateur use (Appendix~\ref{app:hazards}).
+
+All numbers, tables and figures are produced by the Python scripts listed under ``Code and data availability''.
+
+\section{Model}
+
+\subsection{Atmosphere}
+
+Below 86\,km we use the U.S. Standard Atmosphere 1976 \cite{ussa1976}. Within each layer the temperature varies linearly with geopotential altitude $H=r_0z/(r_0+z)$, with $r_0=6356.766$\,km, and the pressure follows from hydrostatic balance. At 30\,km this gives $T=\R{atmT}$\,K, $p=\R{atmP}$\,Pa and $\rho=\R{atmRho}\kgm$. Above 86\,km the last layer is continued isothermally; this affects only the drag, which is negligible there.
+
+\subsection{Balloon}
+
+For a zero-pressure balloon at float, with the lift gas at ambient pressure and temperature, the buoyancy balance is
+\begin{equation}
+V\,\frac{p\,(M_a-M_g)}{R^{*}T}=m_s+m_e ,\qquad m_g=(m_s+m_e)\,\frac{M_g}{M_a-M_g},
+\label{eq:balloon}
+\end{equation}
+where $V$ is the volume, $m_s$ the suspended mass, $m_e$ the envelope mass, $m_g$ the gas mass and $M_a$, $M_g$ the molar masses of air and lift gas. The gas mass per kilogram lifted does not depend on altitude: \R{gasH2}\,kg of hydrogen or \R{gasHe}\,kg of helium. Altitude enters only through the volume. We take $m_e=\sigma A$ with $A=(36\pi)^{1/3}V^{2/3}$, the area of a sphere of the same volume, and an effective areal density $\sigma=30\,\mathrm{g\,m^{-2}}$ (range 20--40). For comparison, 20\,$\mu$m polyethylene film, the thickness quoted for NASA zero-pressure balloons \cite{csbf}, weighs about \R{filmAreal}\,$\mathrm{g\,m^{-2}}$ before seams, load tapes and fittings are added. A natural-shape balloon has more surface than a sphere, so $m_e$ is a lower estimate. A 30\,kg gondola is added to the rocket mass in every balloon calculation.
+
+\subsection{Propulsion}
+\label{sec:prop}
+
+The propellants are unsymmetrical dimethylhydrazine (UDMH) and dinitrogen tetroxide. We compute their performance by the method of the NASA CEA program \cite{gordon1994}, implemented in Cantera 3.2.0 \cite{cantera} with the NASA Glenn thermodynamic data \cite{mcbride2002}, as an ideal-gas mixture of the C/H/N/O species with at most three carbon atoms. The reactants are liquids at 298.15\,K with enthalpies of formation of $+48.3$ and $-19.56\,\mathrm{kJ\,mol^{-1}}$ \cite{nist}. The chamber is at equilibrium at constant enthalpy and pressure, and the nozzle flow is isentropic with the composition re-equilibrated at each pressure (shifting equilibrium). The throat is at the maximum of the mass flux.
+
+The design point is a chamber pressure of 2.0\,MPa and a mixture ratio $\mathrm{O/F}=2.4$ by mass, slightly fuel-rich of the shifting optimum (Appendix~\ref{app:thermo}). This gives a chamber temperature of \R{Tc}\,K and a characteristic velocity of \R{cstar}$\ms$. The delivered vacuum specific impulse is taken as $\eta=0.92$ times the ideal shifting value; $\eta$ is varied between 0.85 and 0.95 in Sec.~\ref{sec:mc}. Figure~\ref{fig:inputs}(b) shows the result as a function of the nozzle area ratio $\varepsilon$.
+
+As a check, for a chamber pressure of 68\,atm expanded to 1\,atm our shifting-equilibrium optimum is \R{bmShift}\,s at $\mathrm{O/F}=2.6$, with a chamber temperature of \R{bmTc}\,K and a characteristic velocity of \R{bmCstar}$\ms$. A secondary compilation quotes 285\,s, 3415\,K and 1720$\ms$ at $\mathrm{O/F}=2.61$ for the same conditions \cite{astronautix}. We have not compared with a primary table.
+
+\subsection{Nozzle selection}
+
+The nozzle is chosen for the altitude at which the engine is ignited. For a required thrust $F$ at ignition and a body diameter $d$, we take the largest area ratio for which (i) the exit pressure is not below the ambient pressure at ignition, so that the flow does not separate, and (ii) the exit area does not exceed the body cross-section. On the ground the first condition binds. In the stratosphere the second one does. For the baseline vehicle this rule gives $\varepsilon=\R{gndEps}$ on the ground and $\varepsilon=\R{balEps}$ at 30\,km (Fig.~\ref{fig:inputs}b). The thrust is
+\begin{equation}
+F=\dot m\,g_0\,\Isp^{\mathrm{vac}}(\varepsilon)-p_a(z)\,A_e ,
+\end{equation}
+with constant mass flow $\dot m$, set by an initial thrust-to-weight ratio of 4.
+
+\subsection{Trajectory}
+\label{sec:traj}
+
+The rocket is a point mass moving vertically:
+\begin{equation}
+\dot z=v,\qquad \dot v=\frac{F-D}{m}-g_0\left(\frac{R_\oplus}{R_\oplus+z}\right)^{2},\qquad \dot m=-\dot m_0\ \ (t<t_b),
+\label{eq:traj}
+\end{equation}
+with drag $D=\tfrac12\rho v^2C_D A$ on the body cross-section $A$ and $R_\oplus=6371$\,km. The equations are integrated with an adaptive Runge--Kutta method \cite{scipy} to a relative tolerance of $10^{-8}$. Gravity and drag losses, $\int g\,dt$ and $\int D/m\,dt$ over the burn, are accumulated with the state.
+
+We do not have a measured drag curve for the vehicle. We assume a generic curve for a slender finned body (Fig.~\ref{fig:inputs}a): $C_D=0.30$ below Mach 0.8, a linear rise to 0.55 at Mach 1.05, and $C_D=0.25+0.30\,(1.05/\mathrm{Ma})^{1.2}$ above. The whole curve is multiplied by a scale factor that is varied between 0.8 and 1.2. That range is suggested by the Traveler~IV flight analysis, in which a six-degree-of-freedom simulation matched the flight only after its drag was raised by 20\% \cite{traveler}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_inputs.pdf}
+\caption{Model inputs. (a) Assumed drag coefficient against Mach number, with the band covered by the scale factor. (b) Delivered vacuum specific impulse of UDMH/N$_2$O$_4$ at 2.0\,MPa and $\mathrm{O/F}=2.4$ against nozzle area ratio (92\% of the ideal shifting-equilibrium value). The dots mark the nozzles selected for the baseline vehicle on the ground and at 30\,km.}
+\label{fig:inputs}
+\end{figure}
+
+\subsection{Vehicle family}
+
+The baseline vehicle has a gross mass $m_0=301.27$\,kg, of which 151.27\,kg is propellant (a propellant fraction of \R{propFrac}), and a diameter of 0.40\,m. For the scaling study the propellant fraction and thrust-to-weight ratio are held fixed and the diameter is scaled as $d\propto m_0^{1/3}$, which keeps the bulk density and fineness constant. The ballistic parameter $m_0/A$ then grows as $m_0^{1/3}$; it is \R{betaBase}$\,\mathrm{kg\,m^{-2}}$ for the baseline.
+
+\subsection{Tank and pressurant mass}
+\label{sec:tanks}
+
+For the closure study (Sec.~\ref{sec:closure}) the dry mass is written $m_{\mathrm{dry}}=m_{\mathrm{fix}}+f\,m_p$, where $m_{\mathrm{fix}}$ collects everything that does not scale with the propellant mass $m_p$ (engine, airframe, valves, avionics, recovery and payload) and $f$ is the mass of tanks and pressurant system per kilogram of propellant. An ideal thin-walled sphere of volume $V$ at pressure $p$ has a wall mass $\tfrac32\,pV\rho_m/\sigma_a$. We take the allowable stress $\sigma_a$ as the yield strength divided by 1.5, a 5\% ullage, propellant densities of 791 and 1450$\kgm$, and a tank pressure of 3\,MPa for a 2\,MPa chamber. This gives \R{ftAl}\,kg of tank per kilogram of propellant for aluminium 6061-T6 (yield 276\,MPa \cite{asm}) and \R{ftSS} for stainless steel 321 (yield 205\,MPa \cite{astm}). The tank mass is multiplied by 1.5 to allow for cylindrical sections, welds and fittings.
+
+The pressurant is helium stored at 30\,MPa in an ideal aluminium sphere and expanded adiabatically until the bottle reaches 1.2 times the tank pressure. For an ideal gas the energy balance gives a bottle volume $V_b=\tfrac53\,p_tV_t/(p_i-p_f)$. Per kilogram of propellant this adds \R{heKg}\,kg of helium and \R{heBottleKg}\,kg of bottle. The totals are $f=\R{feedAl}$ for aluminium tanks and $f=\R{feedSS}$ for steel tanks. Helium is treated as an ideal gas; at 30\,MPa its compressibility is above one, so the bottle is somewhat under-sized.
+
+\section{Validation}
+\label{sec:validation}
+
+\subsection{Deacon ground firings}
+
+NACA flight-tested the 6.25-inch Deacon solid rocket at Wallops Island and reported, for eight rounds, the gross weight, the total impulse and the maximum velocity measured by Doppler radar \cite{watson1949}. The rounds were launched at an elevation of $70^{\circ}$. We model each round with its reported gross mass and impulse, a propellant mass of \R{deaMp}\,kg (103\,lb), a constant thrust over 2.9\,s (the time of maximum velocity reported for round 6), the 6.75-inch maximum diameter that the report uses for drag, and the drag curve of Fig.~\ref{fig:inputs}(a) with a scale factor of one. The flight path is taken as a straight line at $70^{\circ}$.
+
+Table~\ref{tab:deacon} and Fig.~\ref{fig:validation}(a) compare the computed and measured maximum velocities. For rounds 2--7 the model is high by \R{deaErrMean}\% on average and by at most \R{deaErrMaxAbs}\%. Drag removes about \R{deaDragShare}\% of the velocity in these flights, so the comparison does test the drag model. A least-squares fit of the scale factor to rounds 2--7 gives \R{deaCdFit}, inside the 0.8--1.2 band, with an r.m.s. error of \R{deaRmsFit}\%. Rounds 8 and 9, which the report lists at a lower propellant temperature, are over-predicted by \R{deaErrCold}\% on average; a colder grain burns for longer than the 2.9\,s we assume for every round.
+
+\begin{table}[t]
+\centering
+\caption{Deacon ground firings \cite{watson1949}: reported gross mass, total impulse and maximum velocity, and the maximum velocity computed with a drag scale factor of one.}
+\label{tab:deacon}
+\small
+\begin{tabular}{cccccc}
+\toprule
+Round & Gross mass & Impulse & Measured $v_{\max}$ & Computed $v_{\max}$ & Difference \\
+ & (kg) & (kN\,s) & (m\,s$^{-1}$) & (m\,s$^{-1}$) & (\%) \\
+\midrule
+\tabin{tab_deacon.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The first rockoon flight}
+
+Ludwig \cite{ludwig2004} gives the firing altitude and summit of the first successful rockoon: 38\,000\,ft (\R{suiFire}\,km) and about 200\,000\,ft (\R{suiTop}\,km). He does not give the mass of the rocket. Figure~\ref{fig:validation}(b) therefore shows the computed apogee of a Deacon fired vertically at \R{suiFire}\,km as a function of gross mass, using the average impulse of the NACA rounds (\R{deaImp}\,kN\,s). The model reproduces the reported summit for a gross mass of \R{suiMassHi}--\R{suiMassLo}\,kg, depending on the drag scale factor. This is at the heavy end of the \R{nacaMassLo}--\R{nacaMassHi}\,kg flown by NACA; across that range the model gives \R{suiApHeavy}--\R{suiApLight}\,km. The check is therefore a weak one. The model is consistent with the flight if the rockoon was heavy or was not fired vertically, and we cannot tell which from the sources we have. For the same rocket fired vertically from the ground the model gives \R{deaGroundHeavy}--\R{deaGroundLight}\,km.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_validation.pdf}
+\caption{Validation. (a) Computed against measured maximum velocity for the eight Deacon ground rounds of Ref.~\cite{watson1949}; crosses show the model with drag switched off. (b) Computed apogee of a Deacon fired vertically at \R{suiFire}\,km against gross mass, for drag scale factors of 0.8--1.2 (band) and 1.0 (line). The horizontal line is the summit reported for the flight of 28 August 1952 \cite{ludwig2004}.}
+\label{fig:validation}
+\end{figure}
+
+\section{Results}
+
+\subsection{Baseline vehicle}
+
+Table~\ref{tab:baseline} and Fig.~\ref{fig:trajectory} give the trajectory of the baseline vehicle for three cases. Ignited at rest at 30\,km it produces \R{balF}\,kN, burns for \R{balTb}\,s and reaches \R{balAp}\,km. Of the \R{balDv}$\ms$ supplied by thrust, \R{balLg}$\ms$ is lost to gravity and only \R{balLd}$\ms$ to drag. Launched from the ground with the nozzle that the selection rule gives there, the same vehicle reaches \R{gndAp}\,km; its drag loss is \R{gndLd}$\ms$ and its specific impulse at ignition is \R{gndIsp}\,s instead of \R{balIsp}\,s. The balloon raises the apogee by \R{gainKm}\,km, a factor of \R{gainRatio}.
+
+The third case follows the sequence of the 2022 proposal, in which the balloon bursts and the rocket falls 1\,km before ignition. It arrives at 29\,km moving downward at \R{fallSpeed}$\ms$, and the apogee is \R{fallCost}\,km lower.
+
+\begin{table}[t]
+\centering
+\caption{Baseline vehicle (301.27\,kg gross, 151.27\,kg propellant, diameter 0.40\,m, thrust-to-weight ratio 4, $\eta=0.92$).}
+\label{tab:baseline}
+\small
+\begin{tabular}{lccc}
+\toprule
+ & Ignition at 30\,km & Ignition at 29\,km & Ground \\
+ & from rest & after 1\,km fall & launch \\
+\midrule
+Nozzle area ratio & \R{balEps} & \R{fallEps} & \R{gndEps} \\
+Specific impulse at ignition (s) & \R{balIsp} & \R{fallIsp} & \R{gndIsp} \\
+Burn time (s) & \R{balTb} & \R{fallTb} & \R{gndTb} \\
+Burnout altitude (km) & \R{balHb} & \R{fallHb} & \R{gndHb} \\
+Burnout velocity (m\,s$^{-1}$) & \R{balVb} & \R{fallVb} & \R{gndVb} \\
+$\Delta v$ from thrust (m\,s$^{-1}$) & \R{balDv} & \R{fallDv} & \R{gndDv} \\
+Gravity loss (m\,s$^{-1}$) & \R{balLg} & \R{fallLg} & \R{gndLg} \\
+Drag loss (m\,s$^{-1}$) & \R{balLd} & \R{fallLd} & \R{gndLd} \\
+Maximum dynamic pressure (kPa) & \R{balQ} & \R{fallQ} & \R{gndQ} \\
+\textbf{Apogee (km)} & \textbf{\R{balAp}} & \textbf{\R{fallAp}} & \textbf{\R{gndAp}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_trajectory.pdf}
+\caption{(a) Altitude and (b) vertical velocity of the baseline vehicle. Dots mark burnout.}
+\label{fig:trajectory}
+\end{figure}
+
+\subsection{Decomposition of the gain}
+\label{sec:decomp}
+
+A balloon changes three things at once. The rocket starts higher, and gravity is slightly weaker (the head start). It flies through thinner air (drag). Its nozzle can have a larger area ratio and sees a lower back-pressure (nozzle). To separate them, the trajectory code keeps three altitude offsets: one for the position and gravity, one for the atmosphere used in the drag, and one for the atmosphere used in the nozzle selection and back-pressure. Each can be set to the ground or to the float altitude, which gives eight runs (Table~\ref{tab:runs}).
+
+The effects are not additive. Removing drag is worth more when the nozzle is also better, because the rocket is then faster. We therefore attribute the gain by averaging the contribution of each effect over the six orders in which the three can be switched on (the Shapley value). The three contributions add up exactly to the total gain.
+
+\begin{table}[t]
+\centering
+\caption{Apogee of the baseline vehicle for the eight combinations of environments (float altitude 30\,km).}
+\label{tab:runs}
+\small
+\begin{tabular}{cccc}
+\toprule
+Position and gravity & Drag & Nozzle & Apogee (km) \\
+\midrule
+\tabin{tab_runs.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+For the baseline at 30\,km, drag accounts for \R{decDrag}\,km of the \R{gainKm}\,km gain (\R{decFDrag}\%), the nozzle for \R{decNozzle}\,km (\R{decFNozzle}\%) and the head start for \R{decHead}\,km (\R{decFHead}\%). The head-start term is close to the float altitude itself, as expected. Table~\ref{tab:runs} shows the interaction directly: with drag alone removed the apogee is \R{runGBG}\,km, with the nozzle alone changed it is \R{runGGB}\,km, and with both it is \R{runGBB}\,km, more than the two separate gains added to the ground value.
+
+Figure~\ref{fig:decomp} and Table~\ref{tab:decalt} show how the shares depend on float altitude. Drag is the largest term at every altitude, but its share falls from \R{decAltTenDrag}\% at 10\,km to \R{decFDrag}\% at 30\,km, as the head start grows. Most of the drag benefit is collected early, because the density has already fallen to about a third of its sea-level value at 10\,km.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_decomposition.pdf}
+\caption{Decomposition of the apogee gain. (a) Baseline vehicle against float altitude: ground-launch apogee and the three contributions. (b) The same as shares of the gain. (c) Shares at a float altitude of 30\,km against the ballistic parameter. Colours as in (b). Filled symbols: gross mass varied from 25 to 2000\,kg at constant proportions. Open symbols: diameter of the 301\,kg vehicle varied from 0.25 to 0.60\,m.}
+\label{fig:decomp}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Baseline vehicle against float altitude: apogee from the ground and from the balloon, their ratio, and the shares of the gain.}
+\label{tab:decalt}
+\small
+\begin{tabular}{ccccccc}
+\toprule
+Float altitude & \multicolumn{2}{c}{Apogee (km)} & Ratio & \multicolumn{3}{c}{Share of gain (\%)} \\
+(km) & ground & balloon & & drag & nozzle & head start \\
+\midrule
+\tabin{tab_dec_alt.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Dependence on vehicle size}
+
+Table~\ref{tab:decmass} and Fig.~\ref{fig:decomp}(c) give the decomposition at 30\,km for vehicles from 25 to 2000\,kg. Small vehicles have a low ballistic parameter and lose most to drag on the ground. A 50\,kg vehicle reaches \R{decMassFiftyGnd}\,km from the ground and \R{decMassFiftyBal}\,km from the balloon, a factor of \R{decMassFiftyRatio}; \R{decMassFiftyDrag}\% of its gain is drag. A 2000\,kg vehicle of the same proportions reaches \R{decMassBigGnd}\,km from the ground and \R{decMassBigBal}\,km from the balloon, a factor of \R{decMassBigRatio}; drag is \R{decMassBigDrag}\% of the gain and the nozzle \R{decMassBigNozzle}\%. Varying the diameter at fixed mass moves the shares along nearly the same curve (open symbols in Fig.~\ref{fig:decomp}c), so the ballistic parameter is the controlling quantity. Okninski \emph{et al.} \cite{okninski2016} reported that light vehicles benefit most; the present result gives the reason in numbers.
+
+The balloon-launched apogee itself depends little on size, between \R{decMassBigBal} and \R{decMassFiftyBal}\,km over this range. It is slightly higher for small vehicles. With the diameter scaled as $m_0^{1/3}$ and the thrust as $m_0$, the nozzle exit of a small vehicle can occupy a larger area per unit thrust, so the area limit allows a larger area ratio.
+
+\begin{table}[t]
+\centering
+\caption{Vehicles of constant proportions ignited at 30\,km: diameter, ballistic parameter, apogees, ratio, and shares of the gain.}
+\label{tab:decmass}
+\small
+\begin{tabular}{ccccccccc}
+\toprule
+$m_0$ & $d$ & $m_0/A$ & \multicolumn{2}{c}{Apogee (km)} & Ratio & \multicolumn{3}{c}{Share of gain (\%)} \\
+(kg) & (m) & (kg\,m$^{-2}$) & ground & balloon & & drag & nozzle & head start \\
+\midrule
+\tabin{tab_dec_mass.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{What float altitude costs}
+\label{sec:altcost}
+
+Figure~\ref{fig:scaling}(a) shows the apogee against ignition altitude for five vehicle sizes, and Fig.~\ref{fig:scaling}(b) and Table~\ref{tab:altcost} set the apogee of the baseline against the balloon needed to carry it. Over the first 10\,km the apogee rises by \R{gndFirstTen}\,km for each kilometre of ignition altitude. Between 20 and 30\,km it rises by \R{altGainLow}\,km per kilometre, and between 30 and 40\,km by \R{altGainHigh}\,km per kilometre. The balloon volume meanwhile grows by a factor of \R{altVolRatioLow} from 20 to 30\,km and by a further factor of \R{altVolRatioHigh} from 30 to 40\,km, because the volume scales with the inverse of the air density and the envelope grows with it. At 20\,km the baseline already reaches \R{altApTwenty}\,km with a balloon of \R{altVTwenty}\,m$^3$; at 30\,km it reaches \R{balAp}\,km with \R{balV}\,m$^3$.
+
+For the baseline at 30\,km the envelope weighs \R{balEnv}\,kg and the hydrogen \R{balH2}\,kg; with 10\% free lift for the ascent the launch inventory is about \R{balLaunchH2}\,kg. Helium would need \R{balHeVolPct}\% more volume and \R{balHeMassRatio} times the gas mass (\R{balHe}\,kg).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_scaling.pdf}
+\caption{(a) Apogee against ignition altitude for vehicles of constant proportions. (b) Balloon volume (hydrogen, 30\,kg gondola, $\sigma=30\,\mathrm{g\,m^{-2}}$) and apogee of the baseline vehicle against float altitude.}
+\label{fig:scaling}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Balloon for the baseline vehicle and a 30\,kg gondola, and the apogee reached, against float altitude.}
+\label{tab:altcost}
+\small
+\begin{tabular}{ccccc}
+\toprule
+Float altitude & Volume & Envelope & Hydrogen at float & Apogee \\
+(km) & (m$^3$) & (kg) & (kg) & (km) \\
+\midrule
+\tabin{tab_altcost.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Closure for a 100\,km apogee}
+\label{sec:closure}
+
+The previous sections fix the propellant fraction. A real pressure-fed vehicle has to carry tanks and pressurant whose mass grows with the propellant load (Sec.~\ref{sec:tanks}). Here we fix the target, a 100\,km apogee, and solve for the propellant mass that reaches it, with $m_{\mathrm{dry}}=m_{\mathrm{fix}}+f\,m_p$ and the diameter scaled with gross mass as before.
+
+Figure~\ref{fig:closure} and Table~\ref{tab:closure} give the result. With $m_{\mathrm{fix}}=80$\,kg and aluminium tanks, a ground-launched vehicle needs \R{cGndMp}\,kg of propellant and has a gross mass of \R{cGndM}\,kg. Ignited at 30\,km it needs \R{cBalMp}\,kg of propellant, a dry mass of \R{cBalDry}\,kg and a gross mass of \R{cBalM}\,kg: \R{cPropRatio} times less propellant and \R{cMassRatio} times less vehicle. It produces \R{cBalF}\,kN for \R{cBalTb}\,s. With steel tanks the ground-launched vehicle grows to \R{cGndMSS}\,kg, while the balloon-launched one is \R{cBalMSS}\,kg. The balloon makes the design much less sensitive to tank mass.
+
+The balloon is not free. For the aluminium vehicle at 30\,km it has a volume of \R{cBalV}\,m$^3$, an envelope of \R{cBalEnv}\,kg and \R{cBalGas}\,kg of hydrogen at float. Rocket, gondola, envelope and launch gas together come to about \R{cSysBal}\,kg, not far below the \R{cGndM}\,kg of the ground-launched vehicle. At 20\,km the vehicle is \R{cTwentyM}\,kg and the balloon only \R{cTwentyV}\,m$^3$. As in the previous section, most of the saving is available well below 30\,km.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_closure.pdf}
+\caption{Self-consistent vehicles that reach 100\,km, for 3\,MPa tanks of aluminium 6061-T6 (solid) or stainless steel 321 (dashed) and three values of the non-tank dry mass. (a) Gross mass against ignition altitude. (b) Volume of the hydrogen balloon that carries the vehicle and a 30\,kg gondola.}
+\label{fig:closure}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Vehicles that reach 100\,km with $m_{\mathrm{fix}}=80$\,kg. Balloon values are for the aluminium vehicle.}
+\label{tab:closure}
+\small
+\begin{tabular}{ccccccc}
+\toprule
+Ignition & Propellant & \multicolumn{2}{c}{Gross mass (kg)} & \multicolumn{3}{c}{Balloon (Al vehicle)} \\
+altitude (km) & (kg, Al) & Al tanks & steel tanks & volume (m$^3$) & envelope (kg) & H$_2$ (kg) \\
+\midrule
+\tabin{tab_closure.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Uncertainty}
+\label{sec:mc}
+
+To see how firm these results are we drew \R{mcN} samples of five inputs for the baseline vehicle and flew each one from the balloon and from the ground. The inputs and their ranges are: drag scale factor, uniform on 0.8--1.2 (Sec.~\ref{sec:traj}); efficiency $\eta$, uniform on 0.85--0.95; thrust-to-weight ratio, uniform on 3--5; dry mass, normal with a standard deviation of 5\%; and float altitude, uniform on 28--32\,km. Apart from the drag range these are our assumptions.
+
+The balloon-launched apogee has a median of \R{mcBalMed}\,km and a 5th--95th percentile range of \R{mcBalLo}--\R{mcBalHi}\,km (Fig.~\ref{fig:mc}a). None of the samples falls below 100\,km. The ground-launched apogee is \R{mcGndMed}\,km (\R{mcGndLo}--\R{mcGndHi}\,km), and the ratio of the two is \R{mcRatioMed} (\R{mcRatioLo}--\R{mcRatioHi}). The coefficient of variation is \R{mcBalCv}\% from the balloon and \R{mcGndCv}\% from the ground.
+
+The two cases are uncertain for different reasons. The rank correlation of the ground-launched apogee with the drag scale factor is \R{rhoGndCd}; for the balloon-launched apogee it is \R{rhoBalCd}. The balloon-launched apogee is controlled instead by the dry mass (\R{rhoBalDry}) and the efficiency (\R{rhoBalEta}). A balloon launch therefore removes the quantity that is hardest to predict without wind-tunnel or flight data.
+
+The decomposition is stable. Over \R{mcNshap} samples the drag share is \R{mcFDragMed}\% (\R{mcFDragLo}--\R{mcFDragHi}\%), the nozzle share \R{mcFNozzleMed}\% (\R{mcFNozzleLo}--\R{mcFNozzleHi}\%) and the head-start share \R{mcFHeadMed}\% (\R{mcFHeadLo}--\R{mcFHeadHi}\%), and drag is the largest term in every sample (Fig.~\ref{fig:mc}b).
+
+One-at-a-time changes give the same picture. From the balloon, thrust-to-weight ratios of 2 and 8 give \R{sTwLo} and \R{sTwHi}\,km, and halving or doubling the drag coefficient gives \R{sCdLo} and \R{sCdHi}\,km. From the ground, drag scale factors of 0.8 and 1.2 give \R{sGndCdLo} and \R{sGndCdHi}\,km, and bodies of 0.35 and 0.30\,m give \R{sGndD35} and \R{sGndD30}\,km.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_montecarlo.pdf}
+\caption{Monte Carlo results for the baseline vehicle. (a) Apogee from the ground and from the balloon (\R{mcN} samples). (b) Shares of the apogee gain (\R{mcNshap} samples).}
+\label{fig:mc}
+\end{figure}
+
+\section{Discussion}
+
+\subsection{Answers to the three questions}
+
+\emph{Where the gain comes from.} For a pressure-fed vehicle of a few hundred kilograms ignited at 30\,km, about half of the apogee gain is drag that is no longer paid, about three tenths is the nozzle, and the rest is the head start. The nozzle term is larger than we expected. It arises because a pressure-fed engine has a low chamber pressure, so that a nozzle that does not separate at sea level is limited to an area ratio of about \R{gndEps}, while at 30\,km the limit is set only by the body diameter.
+
+\emph{How the balance shifts.} The drag share falls with float altitude and with the ballistic parameter. For large vehicles the nozzle matters almost as much as the drag. This also means that the comparison depends on what the ground-launched vehicle is allowed to be: a slimmer body narrows the gap (Sec.~\ref{sec:mc}).
+
+\emph{What the balloon buys and costs.} For a 100\,km target the balloon cuts the gross mass of an aluminium-tank vehicle by a factor of \R{cMassRatio} and its propellant by a factor of \R{cPropRatio}, and it makes heavier tanks tolerable. The cost is a balloon of order $10^4$\,m$^3$ at 30\,km. Because the gain flattens above about 20\,km while the volume keeps growing six- to ninefold per 10\,km, a float altitude near 20\,km gives most of the benefit for a much smaller balloon.
+
+\subsection{Limitations}
+
+The trajectory is vertical and one-dimensional. A rocket hanging under a balloon has essentially no dynamic pressure at ignition, so fins cannot stabilise it, and it swings; Shoyama \emph{et al.} \cite{shoyama2026} report that elevation oscillation of a suspended launcher is still an open problem. The model also ignores the balloon as an obstacle. The Deacon rockoons were fired from beneath the balloon \cite{ludwig2004}; for a hydrogen balloon and a hypergolic engine this would need a separate safety analysis.
+
+The drag curve is assumed. It reproduces six of the eight Deacon ground rounds to within about 3\%, but those flights cover only the first three seconds and a different body. The rockoon check is weak because the flight mass is not known. The thermochemistry assumes shifting equilibrium and a single efficiency factor. Tank and bottle masses are those of ideal thin-walled spheres with one correction factor, helium is treated as an ideal gas, and no knock-down is applied for welded aluminium. The balloon model neglects superheat, ascent dynamics and the natural shape of the envelope. The ``ground'' and ``balloon'' vehicles share one thrust-to-weight ratio and one body, whereas each would in practice be designed for its own launch condition. We have not attempted a structural, thermal or cost analysis.
+
+\section{Conclusions}
+
+\begin{enumerate}
+\item A first-order model reproduces the maximum velocities of the NACA Deacon ground firings to within \R{deaErrMaxAbs}\% for six of eight rounds, and is consistent with the first rockoon flight of 1952 for a gross mass of \R{suiMassHi}--\R{suiMassLo}\,kg.
+\item For a 301\,kg pressure-fed UDMH/N$_2$O$_4$ vehicle with a propellant fraction of \R{propFrac}, ignition at 30\,km raises the apogee from \R{gndAp} to \R{balAp}\,km. Drag removal contributes \R{decFDrag}\% of the gain, the nozzle \R{decFNozzle}\% and the head start \R{decFHead}\%.
+\item The drag share falls with ballistic parameter, from \R{decMassFiftyDrag}\% at 50\,kg to \R{decMassBigDrag}\% at 2000\,kg, and with float altitude. The apogee ratio falls from \R{decMassFiftyRatio} to \R{decMassBigRatio} over the same range of mass.
+\item Between 20 and 30\,km of float altitude the apogee rises by \R{altGainLow}\,km per kilometre while the balloon volume grows \R{altVolRatioLow}-fold.
+\item A vehicle with 3\,MPa aluminium tanks and 80\,kg of non-tank dry mass that reaches 100\,km has a gross mass of \R{cBalM}\,kg from 30\,km and \R{cGndM}\,kg from the ground.
+\item The balloon-launched apogee is nearly independent of the drag coefficient (rank correlation \R{rhoBalCd}), which is the main uncertainty of the ground-launched one (\R{rhoGndCd}).
+\end{enumerate}
+
+\section*{Acknowledgements}
+
+We thank the principal of CHIREC International School, to whom the original proposal was presented.
+
+\section*{Declaration of generative AI use}
+
+The authors used Claude (Anthropic), a generative AI model, in preparing this work: to review the authors' October 2026 draft, to search for and summarise related literature, to propose and compare candidate research questions, to write and run the analysis code, to produce the figures, and to draft the manuscript text. The 2022 proposal and the decision to revisit it are the authors' own. The authors reviewed the text, code, results and references and take full responsibility for the content of this paper.
+
+\section*{Code and data availability}
+
+The scripts \texttt{rockoon\_model.py} (models), \texttt{run\_analysis.py} (all numbers), \texttt{make\_tables.py}, \texttt{make\_figures.py} and \texttt{check\_paper.py} are provided with this submission. They require Python 3.10 or later with NumPy, SciPy, Matplotlib and Cantera 3.2.0. Every number in the text that is computed is read from \texttt{results.tex}, which \texttt{run\_analysis.py} writes.
+
+\appendix
+
+\section{Audit of the 2022 proposal}
+\label{app:audit}
+
+Project AKS was a proposal that we wrote in 2022--23. It described a 301.27\,kg rocket (150\,kg dry, 151.27\,kg of propellant) burning UDMH and N$_2$O$_4$, carried by a hydrogen balloon to about 30\,km and ignited at about 29\,km after the balloon burst, with a target apogee of 100\,km. It was presented to our school principal and went no further; no hardware was built and no tests were made. The original document is available from the authors. We recomputed every step of it. Table~\ref{tab:audit} lists the errors and the check that would have caught each one. The main points are these.
+
+\emph{Rocket equation.} With a final mass of 150\,kg and an initial mass of $150+\tfrac52 m_{\mathrm{ox}}$, the mass ratio still contains the unknown oxidizer mass. The proposal replaced it by the constant $1+\tfrac52$, evaluated $\ln(1+\tfrac52)$ as $\ln 2.5=\R{audLnA}$ instead of $\ln 3.5=\R{audLnB}$, and obtained $\Delta v=2854.7\ms$. With the proposal's own final masses and specific impulse the rocket equation gives \R{audDvBack}$\ms$, \R{audDvPct}\% less. Nothing connected $\Delta v$ to the target altitude; the minimum drag-free burnout speed for a coast from 30 to 100\,km is \R{vmin}$\ms$.
+
+\emph{Atmosphere and balloon.} The proposal extrapolated the tropospheric lapse rate of $6.49\,\mathrm{K\,km^{-1}}$ to 30\,km and obtained \R{lapT}\,K; the standard value is \R{atmT}\,K, and the linear model reaches absolute zero at \R{lapZero}\,km (Fig.~\ref{fig:appendix}a). With that temperature the barometric formula gives \R{lapP}\,Pa, but 2654.98\,Pa was reported. The density was reported as 1.03$\kgm$, whereas the proposal's own pressure and temperature give \R{propRhoOwn}$\kgm$; the standard value is \R{atmRho}$\kgm$, \R{audRhoTot} times smaller than the figure used. The volume was then computed as a weight in newtons divided by a density, and the hydrogen mass from the density of hydrogen at 0\,$^\circ$C and 1\,atm, which is \R{audH2ratio} times its density at float. These errors partly cancel. The reported volume (2870\,m$^3$) is \R{audVolRatio} times too small for the bare rocket and the reported hydrogen mass (258\,kg) \R{audGasRatio} times too large. Against the complete balloon of Sec.~\ref{sec:altcost} the volume is \R{propVolRatio} times too small and the hydrogen mass \R{propH2Ratio} times too large. Because the final answer looked plausible, nothing prompted a second look.
+
+\emph{Propellant.} The proposal applied the propellants at $\mathrm{O/F}=0.67$ and took its specific impulse, 316.7\,s, from a study of aluminium-loaded UDMH gels at other mixture ratios \cite{varghese1999}. For neat propellants at $\mathrm{O/F}=0.67$ our gas-phase equilibrium calculation gives a chamber temperature of \R{frTc}\,K and an ideal vacuum specific impulse of \R{frShift}\,s, \R{frDeficitPct}\% below the value assumed. That calculation neglects condensed carbon and assumes equilibrium at a temperature where the chemistry is slow, so it is an upper estimate.
+
+\emph{Tanks.} The proposal specified stainless-steel tanks at 3000\,psi (20.7\,MPa) inside a 150\,kg dry mass. By the relation of Sec.~\ref{sec:tanks}, ideal spheres for the \R{propVolL}\,L of propellant weigh \R{tankHP}\,kg (\R{tankHPsf}\,kg with a safety factor of only 1.1), which is \R{ftHP}\,kg per kilogram of propellant. Tanks of this kind limit the mass ratio to \R{mrCap} however much propellant is carried. With a delivered specific impulse of \R{frDel}\,s at $\mathrm{O/F}=0.67$ the ideal $\Delta v$ is then at most \R{dvCap}$\ms$, below the \R{vmin}$\ms$ needed, so the design could not reach 100\,km even with an instantaneous burn and no other dry mass. The specified 5000\,psi (34.5\,MPa) helium bottle would weigh \R{heBottleLo}--\R{heBottleHi}\,t in the same steel, for end pressures of 22--28\,MPa.
+
+\emph{What survives.} With the proposed 150\,kg dry mass and the propulsion of Sec.~\ref{sec:prop}, \R{mpFor100}\,kg of propellant would reach 100\,km from 30\,km, and with the proposed 151\,kg of propellant the dry mass could grow to \R{dryFor100}\,kg. The idea of igniting above most of the atmosphere was sound. What failed was the tank and pressurant specification and the choice of propellants.
+
+\begin{table}[p]
+\centering
+\caption{Errors in the 2022 proposal and the check that would have caught each one.}
+\label{tab:audit}
+\footnotesize
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.2cm}@{}}
+\toprule
+\# & Error & Class & Effect & Check \\
+\midrule
+E1 & Mass ratio $(150+\tfrac52 m_{\mathrm{ox}})/150$ replaced by the constant $1+\tfrac52$ & Algebra & $\Delta v$ made independent of the propellant load & Keep the unknown symbolic to the end \\
+E2 & $\ln(1+\tfrac52)$ evaluated as $\ln 2.5$ & Arithmetic & $\Delta v$ too low by a factor 0.73 & Recompute \\
+E3 & Quoted $\Delta v$ (2855$\ms$) inconsistent with final masses (\R{audDvBack}$\ms$) & Consistency & Propellant and $\Delta v$ do not match & Back-substitute the final answer \\
+E4 & No $\Delta v$ requirement derived from the 100\,km target & Missing model & Propellant load not tied to the mission & Energy bound plus gravity loss \\
+E5 & Invalid rearrangement; $226.215/3.7419=\R{audDiv}\neq 60.51$ & Algebra, arithmetic & Oxidizer mass unsupported & Back-substitute \\
+E6 & Tropospheric lapse rate used up to 30\,km & Model outside its range & \R{lapT}\,K instead of \R{atmT}\,K; density \R{audRhoLow} times too low & Check the validity range \\
+E7 & Barometric formula gives \R{lapP}\,Pa; 2655\,Pa reported & Arithmetic & \R{audPratio} times the formula's own value & Recompute \\
+E8 & Density \R{propRhoOwn}$\kgm$ reported as 1.03$\kgm$ & Arithmetic & \R{audRhoRatio} times the value from its own inputs & Compare with sea level (1.225$\kgm$) \\
+E9 & Volume computed as weight / density & Dimensional & Factor 9.81; units m$^4$\,s$^{-2}$ & Carry units through every line \\
+E10 & Hydrogen density at 0\,$^\circ$C and 1\,atm applied at 30\,km & Reference state & Gas mass \R{audH2ratio} times too high & Evaluate all densities at one state \\
+E11 & Molar volume written as 22.414\,m$^3$\,mol$^{-1}$ & Units & Intermediate result does not follow & Carry units \\
+E12 & $\Isp$ of aluminised gels applied to neat propellants at $\mathrm{O/F}=0.67$ & Data provenance & $\Isp$ overstated by about \R{frDeficitPct}\% & Check the conditions behind every datum \\
+E13 & 20.7\,MPa steel tanks inside a 150\,kg dry mass & Mass closure & Tanks about \R{tankHP}\,kg & Pressure-vessel scaling \\
+E14 & Suborbital cost per kg compared with orbital prices \cite{jones2018}; currency conversion off by ten & Category, arithmetic & Cost claim unsupported & Compare like with like \\
+E15 & Pressure-fed text, pump-fed diagrams; bell and aerospike nozzles & Internal consistency & No single design to analyse & One design, one parts list \\
+E16 & Hazards understated (``only one hazard'', ``foolproof'') & Safety data & Unsafe framing & Consult exposure limits (App.~\ref{app:hazards}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On E14: lifting 1\,kg to 100\,km from rest takes about $1/\R{audEratio}$ of the specific energy of a 400\,km circular orbit, so the two prices are not comparable. The proposal also stated that the vehicle would be the highest-flying student-led rocket. That was already untrue when it was written: the University of Southern California's Traveler~IV reached 339\,800\,ft in April 2019 \cite{traveler}.
+
+\section{Propellant performance against mixture ratio}
+\label{app:thermo}
+
+Figure~\ref{fig:appendix}(b,c) shows the ideal vacuum specific impulse at an area ratio of 36.4 and the chamber temperature at 2.0\,MPa against mixture ratio. The specific impulse peaks at \R{ispShiftPeak}\,s near $\mathrm{O/F}=\R{ofShiftPeak}$ for shifting equilibrium and at \R{ispFrozenPeak}\,s near $\mathrm{O/F}=\R{ofFrozenPeak}$ for a composition frozen at the chamber state. At the design point, $\mathrm{O/F}=2.4$, the values are \R{ispShift}\,s and \R{ispFrozen}\,s, and the delivered value used in the paper is \R{ispDel}\,s (\R{ispDelLo}--\R{ispDelHi}\,s for $\eta=0.85$--0.95). For 68\,atm expanded to 1\,atm the frozen value at $\mathrm{O/F}=2.1$ is \R{bmFrozen}\,s. The calculation is gas-phase only and is not used below $\mathrm{O/F}=0.8$ except for the single point quoted in Appendix~\ref{app:audit}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_appendix.pdf}
+\caption{(a) Temperature of the U.S. Standard Atmosphere 1976 and of the tropospheric lapse rate extrapolated upward, the model of the 2022 proposal. (b) Ideal vacuum specific impulse of UDMH/N$_2$O$_4$ at 2.0\,MPa and an area ratio of 36.4. (c) Chamber temperature.}
+\label{fig:appendix}
+\end{figure}
+
+\section{Hazards and regulation}
+\label{app:hazards}
+
+The hazards that led us to close the project are more serious than the proposal acknowledged. UDMH is classified by IARC in Group 2B, possibly carcinogenic to humans \cite{iarc}. NIOSH lists it as a potential occupational carcinogen with a recommended exposure limit of 0.06\,ppm (2-hour ceiling) and an immediately-dangerous concentration of 15\,ppm; its vapour pressure is 103\,mmHg, about \R{h2oRatio} times that of water at 20\,$^\circ$C, its flash point is 5\,$^\circ$F, and its flammable range is 2--95\% by volume \cite{nioshudmh}. Nitrogen tetroxide is in equilibrium with nitrogen dioxide, for which NIOSH gives a short-term limit of 1\,ppm and an immediately-dangerous concentration of 13\,ppm \cite{nioshno2}. Hydrogen is flammable over a wide range of concentrations in air, and the balloon of Sec.~\ref{sec:altcost} would hold about \R{balLaunchH2}\,kg of it. Professional programmes handle these materials with protective equipment, trained staff and dedicated facilities, none of which a school can provide. Closing the project was the right decision.
+
+A flight in India would also have needed, at a minimum, authorisation from the Indian National Space Promotion and Authorisation Centre \cite{inspace}, airspace clearance under the Bharatiya Vayuyan Adhiniyam, 2024 \cite{bva}, approvals for pressure vessels and gas cylinders \cite{peso}, and compliance with the rules on hazardous chemicals \cite{msihc}. We have not assessed which provisions would apply.
+
+\begin{thebibliography}{99}
+
+\bibitem{ludwig2004} G.\,H. Ludwig, \emph{James Alfred Van Allen: From High School to the Beginning of the Space Era, A Biographical Sketch} (University of Iowa, Iowa City, 9 October 2004), pp.~7--8, \url{https://space.physics.uiowa.edu/plasma-wave/van90/VanAllenBio_LudwigOct2004.pdf}.
+
+\bibitem{okninski2016} A. Okninski, D. Sors Raurell, and A. Rodriguez Mitre, ``Feasibility of a low-cost sounding rockoon platform,'' Acta Astronaut. \textbf{127}, 335--344 (2016), doi:10.1016/j.actaastro.2016.06.010.
+
+\bibitem{li2022} J. Li, K. Peng, W. Wang, Z. Wu, and W. Zhang, ``Optimization design of rockoons based on improved sequential approximation optimization,'' Proc. Inst. Mech. Eng. G: J. Aerosp. Eng. \textbf{236}, 140--153 (2022), doi:10.1177/09544100211008604.
+
+\bibitem{jorda2012} R. Jorda-Siquier, ``Rockoon suitability for launching small satellites into LEO orbits,'' in \emph{63rd International Astronautical Congress}, paper IAC-12-D2.7.4 (Naples, 2012).
+
+\bibitem{shoyama2021} T. Shoyama, A. Banno, Y. Furuta, N. Kurata, D. Ode, Y. Wada, and T. Matsui, ``Air-launch experiment using suspended rail launcher for rockoon,'' Aerospace \textbf{8}, 289 (2021), doi:10.3390/aerospace8100289.
+
+\bibitem{shoyama2026} T. Shoyama, Y. Wada, and S. Oda, ``Rockoon launch experiment with azimuth angle control,'' Aerospace \textbf{13}, 709 (2026), doi:10.3390/aerospace13080709.
+
+\bibitem{jones1955} M.\,S. Jones, Jr., ``A method for estimating altitude performance of balloon launched rockets,'' Jet Propulsion \textbf{25}, 531--534 (1955).
+
+\bibitem{ussa1976} \emph{U.S. Standard Atmosphere, 1976}, NOAA-S/T 76-1562 (National Oceanic and Atmospheric Administration, National Aeronautics and Space Administration, and U.S. Air Force, Washington, DC, 1976).
+
+\bibitem{csbf} NASA Columbia Scientific Balloon Facility, ``Balloons,'' \url{https://csbf.nasa.gov/balloons.html} (accessed 29 October 2026).
+
+\bibitem{gordon1994} S. Gordon and B.\,J. McBride, \emph{Computer Program for Calculation of Complex Chemical Equilibrium Compositions and Applications. I. Analysis}, NASA Reference Publication 1311 (NASA Lewis Research Center, Cleveland, OH, 1994).
+
+\bibitem{cantera} D.\,G. Goodwin, H.\,K. Moffat, I. Schoegl, R.\,L. Speth, and B.\,W. Weber, \emph{Cantera: An Object-Oriented Software Toolkit for Chemical Kinetics, Thermodynamics, and Transport Processes}, version 3.2.0 (2025), \url{https://www.cantera.org}, doi:10.5281/zenodo.17620923.
+
+\bibitem{mcbride2002} B.\,J. McBride, M.\,J. Zehe, and S. Gordon, \emph{NASA Glenn Coefficients for Calculating Thermodynamic Properties of Individual Species}, NASA/TP-2002-211556 (NASA Glenn Research Center, Cleveland, OH, 2002).
+
+\bibitem{nist} P.\,J. Linstrom and W.\,G. Mallard, eds., \emph{NIST Chemistry WebBook}, NIST Standard Reference Database Number 69 (National Institute of Standards and Technology, Gaithersburg, MD), \url{https://webbook.nist.gov} (accessed 29 October 2026).
+
+\bibitem{astronautix} M. Wade, ``N2O4/UDMH,'' in \emph{Encyclopedia Astronautica}, \url{http://www.astronautix.com/n/n2o4udmh.html} (accessed 18 November 2026).
+
+\bibitem{scipy} P. Virtanen \emph{et al.}, ``SciPy 1.0: fundamental algorithms for scientific computing in Python,'' Nat. Methods \textbf{17}, 261--272 (2020).
+
+\bibitem{traveler} A. Aitoumeziane, P. Eusebio, C. Hayes, V. Ramachandran, J. Smith, J. Sridharan, L. St.~Regis, M. Stephenson, N. Tewksbury, M. Tran, and H. Yang, ``Traveler IV apogee analysis,'' white paper (USC Rocket Propulsion Laboratory, Los Angeles, May 2019), \url{http://www.uscrpl.com/s/Traveler-IV-Whitepaper}.
+
+\bibitem{asm} ASM International, \emph{ASM Handbook, Vol.~2: Properties and Selection: Nonferrous Alloys and Special-Purpose Materials} (ASM International, Materials Park, OH, 1990).
+
+\bibitem{astm} ASTM International, \emph{ASTM A240/A240M-20a: Standard Specification for Chromium and Chromium-Nickel Stainless Steel Plate, Sheet, and Strip for Pressure Vessels and for General Applications} (ASTM International, West Conshohocken, PA, 2020).
+
+\bibitem{watson1949} R.\,S. Watson, \emph{Flight Investigation of 6.25-Inch-Diameter Deacon Rocket and 10-Inch-Scale Model Rocket}, NACA Research Memorandum RM L8H26 (Langley Aeronautical Laboratory, Langley Air Force Base, VA, 25 March 1949), \url{https://ntrs.nasa.gov/citations/20050019279}.
+
+\bibitem{varghese1999} T.\,L. Varghese, N. Prabhakaran, K.\,P. Thanki, S. Subramanian, S.\,S. Rao, K.\,N. Ninan, and V.\,N. Krishnamurthy, ``Performance evaluation and experimental studies on metallised gel propellants,'' Def. Sci. J. \textbf{49}, 71--78 (1999).
+
+\bibitem{jones2018} H.\,W. Jones, ``The recent large reduction in space launch cost,'' in \emph{48th International Conference on Environmental Systems}, ICES-2018-81 (Albuquerque, NM, 2018).
+
+\bibitem{iarc} International Agency for Research on Cancer, \emph{IARC Monographs on the Evaluation of Carcinogenic Risks to Humans, Vol.~71: Re-evaluation of Some Organic Chemicals, Hydrazine and Hydrogen Peroxide} (IARC, Lyon, 1999).
+
+\bibitem{nioshudmh} National Institute for Occupational Safety and Health, ``NIOSH Pocket Guide to Chemical Hazards: 1,1-Dimethylhydrazine,'' \url{https://www.cdc.gov/niosh/npg/npgd0227.html} (accessed 18 November 2026).
+
+\bibitem{nioshno2} National Institute for Occupational Safety and Health, ``NIOSH Pocket Guide to Chemical Hazards: Nitrogen dioxide,'' \url{https://www.cdc.gov/niosh/npg/npgd0454.html} (accessed 18 November 2026).
+
+\bibitem{inspace} Indian National Space Promotion and Authorisation Centre, \emph{Norms, Guidelines and Procedures for Implementation of Indian Space Policy-2023 in respect of Authorization of Space Activities}, IN:ISP2023:NGP2024/V1.0 (IN-SPACe, Ahmedabad, 2024).
+
+\bibitem{bva} Government of India, \emph{The Bharatiya Vayuyan Adhiniyam, 2024}, Act No.~16 of 2024.
+
+\bibitem{peso} Government of India, \emph{The Static and Mobile Pressure Vessels (Unfired) Rules, 2016}, G.S.R. 1109(E), and \emph{The Gas Cylinders Rules, 2016}, G.S.R. 1081(E).
+
+\bibitem{msihc} Government of India, \emph{The Manufacture, Storage and Import of Hazardous Chemical Rules, 1989}, S.O. 966(E), under the Environment (Protection) Act, 1986.
+
+\end{thebibliography}
+
+\end{document}

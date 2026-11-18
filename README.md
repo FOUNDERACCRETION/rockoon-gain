@@ -1,0 +1,30 @@
+# Rockoon apogee-gain decomposition
+
+Code and manuscript for "Where does the rockoon advantage come from? Decomposing the apogee
+gain of balloon-launched pressure-fed sounding rockets" (Ramnani, Aduru, Reddy, 2026).
+
+## Reproduce everything
+
+Requires Python 3.10+ and a LaTeX installation.
+
+    pip install numpy scipy matplotlib cantera==3.2.0
+    cd code
+    python rockoon_model.py     # builds thermo_table.json (about 1 minute)
+    python run_analysis.py      # all numbers -> results/results.json, paper/results.tex (about 2 minutes)
+    python make_tables.py       # table bodies -> paper/tab_*.tex
+    python make_figures.py      # figures -> paper/figures/*.pdf
+    python check_paper.py       # consistency checks; must print "none" on every line
+    cd ../paper
+    latexmk -pdf paper.tex
+
+Every computed number in `paper.tex` is a `\R{key}` macro read from `results.tex`, so the text
+cannot drift from the code. The Monte Carlo seed is fixed (20261118).
+
+## Layout
+
+- `code/rockoon_model.py`  atmosphere, balloon, thermochemistry, nozzle, trajectory, tanks
+- `code/run_analysis.py`   every calculation in the paper
+- `code/make_tables.py`, `code/make_figures.py`, `code/check_paper.py`
+- `paper/`                 LaTeX source, generated tables and figures
+- `results/results.json`   all results, including Monte Carlo samples
+- `CITATION_LEDGER.md`     verification state of each reference
