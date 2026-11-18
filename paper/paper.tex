@@ -234,7 +234,7 @@ Float altitude & \multicolumn{2}{c}{Apogee (km)} & Ratio & \multicolumn{3}{c}{Sh
 
 \subsection{Dependence on vehicle size}
 
-Table~\ref{tab:decmass} and Fig.~\ref{fig:decomp}(c) give the decomposition at 30\,km for vehicles from 25 to 2000\,kg. Small vehicles have a low ballistic parameter and lose most to drag on the ground. A 50\,kg vehicle reaches \R{decMassFiftyGnd}\,km from the ground and \R{decMassFiftyBal}\,km from the balloon, a factor of \R{decMassFiftyRatio}; \R{decMassFiftyDrag}\% of its gain is drag. A 2000\,kg vehicle of the same proportions reaches \R{decMassBigGnd}\,km from the ground and \R{decMassBigBal}\,km from the balloon, a factor of \R{decMassBigRatio}; drag is \R{decMassBigDrag}\% of the gain and the nozzle \R{decMassBigNozzle}\%. Varying the diameter at fixed mass moves the shares along nearly the same curve (open symbols in Fig.~\ref{fig:decomp}c), so the ballistic parameter is the controlling quantity. Okninski \emph{et al.} \cite{okninski2016} reported that light vehicles benefit most; the present result gives the reason in numbers.
+Table~\ref{tab:decmass} and Fig.~\ref{fig:decomp}(c) give the decomposition at 30\,km for vehicles from 25 to 2000\,kg. Small vehicles have a low ballistic parameter and lose most to drag on the ground. A 50\,kg vehicle reaches \R{decMassFiftyGnd}\,km from the ground and \R{decMassFiftyBal}\,km from the balloon, a factor of \R{decMassFiftyRatio}; \R{decMassFiftyDrag}\% of its gain is drag. A 2000\,kg vehicle of the same proportions reaches \R{decMassBigGnd}\,km from the ground and \R{decMassBigBal}\,km from the balloon, a factor of \R{decMassBigRatio}; drag is \R{decMassBigDrag}\% of the gain and the nozzle \R{decMassBigNozzle}\%. Varying the diameter at fixed mass moves the shares along nearly the same curve (open symbols in Fig.~\ref{fig:decomp}c), so the ballistic parameter is the controlling quantity. Okninski \emph{et al.} \cite{okninski2016} found low-mass designs advantageous for their solid-propellant rockoon; the present result shows the same trend and gives its size.
 
 The balloon-launched apogee itself depends little on size, between \R{decMassBigBal} and \R{decMassFiftyBal}\,km over this range. It is slightly higher for small vehicles. With the diameter scaled as $m_0^{1/3}$ and the thrust as $m_0$, the nozzle exit of a small vehicle can occupy a larger area per unit thrust, so the area limit allows a larger area ratio.
 
@@ -313,6 +313,30 @@ altitude (km) & (kg, Al) & Al tanks & steel tanks & volume (m$^3$) & envelope (k
 \end{tabular}
 \end{table}
 
+\subsection{Robustness of the comparison}
+\label{sec:robust}
+
+Two choices in the comparison above favour the balloon, and we test both.
+
+First, the ground-launched vehicle has so far been the balloon vehicle with a different nozzle. A vehicle designed for ground launch would be slimmer. Taking the baseline body to have a length-to-diameter ratio of 10, we let each vehicle choose its own ratio between 10 and 20 at constant volume, and its own thrust-to-weight ratio up to \R{twMax} (a burnout acceleration of 15\,$g$). The ground-launched vehicle then prefers the slimmest body (\R{optGndD}\,m) and a thrust-to-weight ratio of \R{optGndTw}, and reaches \R{optGndAp}\,km. The balloon-launched vehicle keeps the 0.40\,m body, whose larger base allows a larger nozzle, takes a thrust-to-weight ratio of \R{optBalTw}, and reaches \R{optBalAp}\,km. With each vehicle designed for its own launch the ratio is \R{optRatio} instead of \R{gainRatio}, and the gain is \R{optGain}\,km instead of \R{gainKm}\,km. If both vehicles use the slim \R{slimD}\,m body, the apogees are \R{slimGnd} and \R{slimBal}\,km and the shares are \R{slimFDrag}\% drag, \R{slimFNozzle}\% nozzle and \R{slimFHead}\% head start. Drag remains the largest term, but by a smaller margin.
+
+Second, the nozzle term depends on the chamber pressure, because a higher pressure allows a larger area ratio on the ground. Table~\ref{tab:pc} repeats the calculation at 1, 2 and 4\,MPa. The nozzle share falls from \R{pcOneFNozzle}\% at 1\,MPa to \R{pcFourFNozzle}\% at 4\,MPa and the apogee ratio from \R{pcOneRatio} to \R{pcFourRatio}. The ordering of the three terms does not change.
+
+\begin{table}[t]
+\centering
+\caption{Baseline vehicle at three chamber pressures ($\mathrm{O/F}=2.4$, float altitude 30\,km): selected area ratios and specific impulse at ignition on the ground (g) and at 30\,km (b), apogees, ratio, and shares of the gain.}
+\label{tab:pc}
+\small
+\begin{tabular}{ccccccccccc}
+\toprule
+$p_c$ & \multicolumn{2}{c}{$\varepsilon$} & \multicolumn{2}{c}{$\Isp$ (s)} & \multicolumn{2}{c}{Apogee (km)} & Ratio & \multicolumn{3}{c}{Share of gain (\%)} \\
+(MPa) & g & b & g & b & ground & balloon & & drag & nozzle & head \\
+\midrule
+\tabin{tab_pc.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Uncertainty}
 \label{sec:mc}
 
@@ -339,7 +363,7 @@ One-at-a-time changes give the same picture. From the balloon, thrust-to-weight 
 
 \emph{Where the gain comes from.} For a pressure-fed vehicle of a few hundred kilograms ignited at 30\,km, about half of the apogee gain is drag that is no longer paid, about three tenths is the nozzle, and the rest is the head start. The nozzle term is larger than we expected. It arises because a pressure-fed engine has a low chamber pressure, so that a nozzle that does not separate at sea level is limited to an area ratio of about \R{gndEps}, while at 30\,km the limit is set only by the body diameter.
 
-\emph{How the balance shifts.} The drag share falls with float altitude and with the ballistic parameter. For large vehicles the nozzle matters almost as much as the drag. This also means that the comparison depends on what the ground-launched vehicle is allowed to be: a slimmer body narrows the gap (Sec.~\ref{sec:mc}).
+\emph{How the balance shifts.} The drag share falls with float altitude and with the ballistic parameter. For large vehicles the nozzle matters almost as much as the drag. The comparison also depends on what the ground-launched vehicle is allowed to be. When each vehicle is designed for its own launch condition the apogee ratio falls from \R{gainRatio} to \R{optRatio} (Sec.~\ref{sec:robust}).
 
 \emph{What the balloon buys and costs.} For a 100\,km target the balloon cuts the gross mass of an aluminium-tank vehicle by a factor of \R{cMassRatio} and its propellant by a factor of \R{cPropRatio}, and it makes heavier tanks tolerable. The cost is a balloon of order $10^4$\,m$^3$ at 30\,km. Because the gain flattens above about 20\,km while the volume keeps growing six- to ninefold per 10\,km, a float altitude near 20\,km gives most of the benefit for a much smaller balloon.
 
@@ -347,7 +371,7 @@ One-at-a-time changes give the same picture. From the balloon, thrust-to-weight 
 
 The trajectory is vertical and one-dimensional. A rocket hanging under a balloon has essentially no dynamic pressure at ignition, so fins cannot stabilise it, and it swings; Shoyama \emph{et al.} \cite{shoyama2026} report that elevation oscillation of a suspended launcher is still an open problem. The model also ignores the balloon as an obstacle. A rocket fired vertically from beneath a balloon has to pass through it or beside it; for a hydrogen balloon and a hypergolic engine this would need a separate safety analysis.
 
-The drag curve is assumed. It reproduces six of the eight Deacon ground rounds to within about 3\%, but those flights cover only the first three seconds and a different body. The rockoon check is weak because the flight mass is not known. The thermochemistry assumes shifting equilibrium and a single efficiency factor. Tank and bottle masses are those of ideal thin-walled spheres with one correction factor, helium is treated as an ideal gas, and no knock-down is applied for welded aluminium. The balloon model neglects superheat, ascent dynamics and the natural shape of the envelope. The ``ground'' and ``balloon'' vehicles share one thrust-to-weight ratio and one body, whereas each would in practice be designed for its own launch condition. We have not attempted a structural, thermal or cost analysis.
+The drag curve is assumed. It reproduces six of the eight Deacon ground rounds to within about 3\%, but those flights cover only the first three seconds and a different body. The rockoon check is weak because the flight mass is not known. The thermochemistry assumes shifting equilibrium and a single efficiency factor. Tank and bottle masses are those of ideal thin-walled spheres with one correction factor, helium is treated as an ideal gas, and no knock-down is applied for welded aluminium. The balloon model neglects superheat, ascent dynamics and the natural shape of the envelope. Except in Sec.~\ref{sec:robust}, the ``ground'' and ``balloon'' vehicles share one thrust-to-weight ratio and one body. We have not attempted a structural, thermal or cost analysis.
 
 \section{Conclusions}
 
@@ -357,6 +381,7 @@ The drag curve is assumed. It reproduces six of the eight Deacon ground rounds t
 \item The drag share falls with ballistic parameter, from \R{decMassFiftyDrag}\% at 50\,kg to \R{decMassBigDrag}\% at 2000\,kg, and with float altitude. The apogee ratio falls from \R{decMassFiftyRatio} to \R{decMassBigRatio} over the same range of mass.
 \item Between 20 and 30\,km of float altitude the apogee rises by \R{altGainLow}\,km per kilometre while the balloon volume grows \R{altVolRatioLow}-fold.
 \item A vehicle with 3\,MPa aluminium tanks and 80\,kg of non-tank dry mass that reaches 100\,km has a gross mass of \R{cBalM}\,kg from 30\,km and \R{cGndM}\,kg from the ground.
+\item When each vehicle is designed for its own launch condition the apogee ratio is \R{optRatio} instead of \R{gainRatio}; raising the chamber pressure from 1 to 4\,MPa lowers the nozzle share from \R{pcOneFNozzle}\% to \R{pcFourFNozzle}\%. Drag is the largest term in every case examined.
 \item The balloon-launched apogee is nearly independent of the drag coefficient (rank correlation \R{rhoBalCd}), which is the main uncertainty of the ground-launched one (\R{rhoGndCd}).
 \end{enumerate}
 
@@ -457,7 +482,7 @@ A flight in India would also have needed, at a minimum, authorisation from the I
 
 \bibitem{ussa1976} \emph{U.S. Standard Atmosphere, 1976}, NOAA-S/T 76-1562 (National Oceanic and Atmospheric Administration, National Aeronautics and Space Administration, and U.S. Air Force, Washington, DC, 1976).
 
-\bibitem{csbf} NASA Columbia Scientific Balloon Facility, ``Balloons,'' \url{https://csbf.nasa.gov/balloons.html} (accessed 29 October 2026).
+\bibitem{csbf} NASA Columbia Scientific Balloon Facility, ``Balloons,'' \url{https://csbf.nasa.gov/balloons.html} (accessed 18 November 2026).
 
 \bibitem{gordon1994} S. Gordon and B.\,J. McBride, \emph{Computer Program for Calculation of Complex Chemical Equilibrium Compositions and Applications. I. Analysis}, NASA Reference Publication 1311 (NASA Lewis Research Center, Cleveland, OH, 1994).
 
@@ -465,7 +490,7 @@ A flight in India would also have needed, at a minimum, authorisation from the I
 
 \bibitem{mcbride2002} B.\,J. McBride, M.\,J. Zehe, and S. Gordon, \emph{NASA Glenn Coefficients for Calculating Thermodynamic Properties of Individual Species}, NASA/TP-2002-211556 (NASA Glenn Research Center, Cleveland, OH, 2002).
 
-\bibitem{nist} P.\,J. Linstrom and W.\,G. Mallard, eds., \emph{NIST Chemistry WebBook}, NIST Standard Reference Database Number 69 (National Institute of Standards and Technology, Gaithersburg, MD), \url{https://webbook.nist.gov} (accessed 29 October 2026).
+\bibitem{nist} P.\,J. Linstrom and W.\,G. Mallard, eds., \emph{NIST Chemistry WebBook}, NIST Standard Reference Database Number 69 (National Institute of Standards and Technology, Gaithersburg, MD), \url{https://webbook.nist.gov} (accessed 18 November 2026).
 
 \bibitem{astronautix} M. Wade, ``N2O4/UDMH,'' in \emph{Encyclopedia Astronautica}, \url{http://www.astronautix.com/n/n2o4udmh.html} (accessed 18 November 2026).
 

@@ -183,6 +183,40 @@ def main():
         row['beta'] = row['m0'] / (math.pi * dd * dd / 4)
     put('betaBase', M0 / (math.pi * 0.04), '{:.0f}')
     put('betaLo', RES['dec_mass'][0]['beta'], '{:.0f}'); put('betaHi', RES['dec_mass'][-1]['beta'], '{:.0f}')
+    # ---- robustness: each vehicle designed for its own launch condition, and chamber pressure
+    tw_max = 15.0 * (1 - fr_)
+    put('twMax', tw_max, '{:.1f}')
+    best = {}
+    for tag, z in (('Gnd', 0.0), ('Bal', 30e3)):
+        cand = []
+        for fin in (10.0, 12.5, 15.0, 17.5, 20.0):
+            for tw in np.arange(1.5, tw_max + 1e-9, 0.25):
+                try:
+                    cand.append((rm.vehicle_run(M0, MP, z, d=rm.diameter(M0, fineness=fin), tw=float(tw))['apogee'] / 1e3, fin, float(tw)))
+                except ValueError:
+                    pass
+        best[tag] = max(cand)
+        put('opt' + tag + 'Ap', best[tag][0], '{:.0f}'); put('opt' + tag + 'Fin', best[tag][1], '{:.1f}'); put('opt' + tag + 'Tw', best[tag][2], '{:.2f}')
+        put('opt' + tag + 'D', rm.diameter(M0, fineness=best[tag][1]), '{:.2f}')
+    put('optRatio', best['Bal'][0] / best['Gnd'][0], '{:.1f}'); put('optGain', best['Bal'][0] - best['Gnd'][0], '{:.0f}')
+    slim = dec(M0, MP, 30e3, d=rm.diameter(M0, fineness=20.0))
+    RES['dec_slim'] = slim
+    put('slimD', rm.diameter(M0, fineness=20.0), '{:.2f}')
+    for k in ('head', 'drag', 'nozzle'):
+        put('slimF' + k.title(), 100 * slim['f_' + k], '{:.0f}')
+    put('slimGnd', slim['ground'], '{:.0f}'); put('slimBal', slim['balloon'], '{:.0f}'); put('slimRatio', slim['balloon'] / slim['ground'], '{:.1f}')
+    RES['dec_pc'] = []
+    for key, tag, pcv in (('nozzle_1MPa', 'One', 1.0), ('nozzle', 'Two', 2.0), ('nozzle_4MPa', 'Four', 4.0)):
+        row = dec(M0, MP, 30e3, key=key); row['pc'] = pcv
+        g = rm.vehicle_run(M0, MP, 0.0, key=key); b = rm.vehicle_run(M0, MP, 30e3, key=key)
+        row.update(eps_g=g['eps'], eps_b=b['eps'], isp_g=g['isp_ign'], isp_b=b['isp_ign'])
+        RES['dec_pc'].append(row)
+        for k in ('head', 'drag', 'nozzle'):
+            put('pc' + tag + 'F' + k.title(), 100 * row['f_' + k], '{:.0f}')
+        put('pc' + tag + 'Gnd', row['ground'], '{:.0f}'); put('pc' + tag + 'Bal', row['balloon'], '{:.0f}')
+        put('pc' + tag + 'EpsG', g['eps'], '{:.1f}'); put('pc' + tag + 'EpsB', b['eps'], '{:.0f}')
+        put('pc' + tag + 'IspG', g['isp_ign'], '{:.0f}'); put('pc' + tag + 'IspB', b['isp_ign'], '{:.0f}')
+        put('pc' + tag + 'Ratio', row['balloon'] / row['ground'], '{:.1f}')
     # ---- scaling map and balloon cost of altitude
     zs = np.arange(0.0, 42.5, 2.5); ms = [50, 100, 200, 301.27, 500]
     grid = [[rm.vehicle_run(m, fr_ * m, z * 1e3)['apogee'] / 1e3 for z in zs] for m in ms]

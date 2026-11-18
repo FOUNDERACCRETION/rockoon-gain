@@ -134,7 +134,8 @@ def expansion(of, pc, shifting=True, n=160, pr_min=2.0e-5):
 
 
 def build_tables(path):
-    out = {'nozzle': expansion(2.4, 2.0e6, True)}
+    out = {'nozzle': expansion(2.4, 2.0e6, True), 'nozzle_1MPa': expansion(2.4, 1.0e6, True),
+           'nozzle_4MPa': expansion(2.4, 4.0e6, True)}
     ofs = [0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.05, 2.2, 2.4, 2.6, 2.75, 3.0, 3.3, 3.6, 4.0]
     sweep = []
     for of in ofs:
@@ -170,9 +171,10 @@ def table():
             build_tables(path)
         with open(path) as f:
             _TABLE = json.load(f)
-        nz = _TABLE['nozzle']
-        for k in ('pe', 'eps', 'isp_vac', 'isp_opt'):
-            nz[k] = np.array(nz[k])
+        for key in ('nozzle', 'nozzle_1MPa', 'nozzle_4MPa'):
+            nz = _TABLE[key]
+            for k in ('pe', 'eps', 'isp_vac', 'isp_opt'):
+                nz[k] = np.array(nz[k])
     return _TABLE
 
 
@@ -183,8 +185,8 @@ class Nozzle:
     pressure at ignition and the exit area does not exceed the body cross-section.
     """
 
-    def __init__(self, z_ign, thrust, d_body, eta=0.92):
-        nz = table()['nozzle']
+    def __init__(self, z_ign, thrust, d_body, eta=0.92, key='nozzle'):
+        nz = table()[key]
         pa = atmosphere(z_ign)[1]
         A_body = math.pi * d_body ** 2 / 4.0
         cstar, pc = nz['cstar'], nz['pc']
@@ -271,22 +273,23 @@ def fly(m0, mp, d, mdot, isp_vac, Ae, z_kin=0.0, z_drag=None, z_noz=None, v0=0.0
     return out
 
 
-def diameter(m0, d_ref=0.40, m_ref=301.27):
-    """Body diameter at constant bulk density and fineness."""
-    return d_ref * (m0 / m_ref) ** (1.0 / 3.0)
+def diameter(m0, d_ref=0.40, m_ref=301.27, fineness=10.0):
+    """Body diameter at constant bulk density. The baseline (0.40 m) is taken to have a
+    length-to-diameter ratio of 10; other values rescale the diameter at constant volume."""
+    return d_ref * (m0 / m_ref) ** (1.0 / 3.0) * (10.0 / fineness) ** (1.0 / 3.0)
 
 
-def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0):
+def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle'):
     """Design the nozzle for the ignition altitude and fly. switches = (kin, drag, nozzle) booleans
     selecting the balloon (True) or ground (False) environment for each effect."""
     d = diameter(m0) if d is None else d
     F = tw * m0 * G0
     if switches is None:
-        nz = Nozzle(z_ign, F, d, eta)
+        nz = Nozzle(z_ign, F, d, eta, key)
         r = fly(m0, mp, d, nz.mdot, nz.isp_vac, nz.Ae, z_kin=z_ign, cd_scale=cd_scale, v0=v0)
     else:
         k, dr, n = switches
-        nz = Nozzle(z_ign if n else 0.0, F, d, eta)
+        nz = Nozzle(z_ign if n else 0.0, F, d, eta, key)
         r = fly(m0, mp, d, nz.mdot, nz.isp_vac, nz.Ae, z_kin=z_ign if k else 0.0,
                 z_drag=z_ign if dr else 0.0, z_noz=z_ign if n else 0.0, cd_scale=cd_scale)
     r.update(eps=nz.eps, pe=nz.pe, Ae=nz.Ae, mdot=nz.mdot, isp_vac=nz.isp_vac, limit=nz.limit, d=d)

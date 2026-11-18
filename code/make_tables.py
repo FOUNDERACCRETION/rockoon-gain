@@ -36,4 +36,8 @@ for x in R['alt_cost']:
     if x['z'] in (15.0, 20.0, 25.0, 30.0, 35.0, 40.0):
         rows.append('%.0f & %s & %.0f & %.1f & %.0f \\\\' % (x['z'], '{:,.0f}'.format(round(x['V'], -2)).replace(',', '\\,'), x['env'], x['gas'], x['apogee']))
 w('tab_altcost.tex', rows)
+rows = []
+for r in R['dec_pc']:
+    rows.append('%.0f & %.1f & %.0f & %.0f & %.0f & %.0f & %.0f & %.1f & %.0f & %.0f & %.0f \\\\' % (r['pc'], r['eps_g'], r['eps_b'], r['isp_g'], r['isp_b'], r['ground'], r['balloon'], r['balloon'] / r['ground'], 100 * r['f_drag'], 100 * r['f_nozzle'], 100 * r['f_head']))
+w('tab_pc.tex', rows)
 print('tables written')
