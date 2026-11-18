@@ -1,6 +1,6 @@
 # Rockoon apogee-gain decomposition
 
-Code and manuscript for "Attributing the rockoon advantage and the mass-optimal float altitude for balloon-launched sounding rockets" (Ramnani, Aduru, Reddy, 2026).
+Code and manuscript for "The mass-optimal float altitude for balloon-launched sounding rockets, and where the rockoon advantage comes from" (Ramnani, Aduru, Reddy, 2026).
 
 ## Check validity
 
@@ -48,3 +48,12 @@ cannot drift from the code. The random seeds are fixed (20261118 and 20261119).
 - `paper/`                 LaTeX source, generated tables and figures
 - `results/results.json`   all results, including Monte Carlo samples
 - `CITATION_LEDGER.md`     verification state of each reference
+
+
+## Supplement
+
+`supplement/audit_2022.tex` holds the full audit of the 2022 Project AKS proposal (sixteen errors, their effects and the checks that would have caught them) and the hazards and regulation notes. It reads the same `paper/results.tex`; `run_all.sh` compiles it after the paper.
+
+## arXiv category
+
+Primary physics.app-ph, cross-list physics.class-ph. Not physics.space-ph (space plasma physics).

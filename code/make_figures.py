@@ -185,6 +185,16 @@ def fig_appendix():
     save(fig, 'fig_appendix')
 
 
+def fig_lapse():
+    """Supplement: the proposal's extrapolated lapse rate against the standard atmosphere."""
+    fig, ax = plt.subplots(figsize=(3.3, 2.6))
+    z = np.linspace(0, 44, 300)
+    ax.plot([rm.atmosphere(x * 1e3)[0] for x in z], z, color=BLUE, label='USSA 1976')
+    ax.plot([rm.lapse_extrapolation(x * 1e3)[0] for x in z], z, color=ORANGE, label='lapse rate\nextrapolated')
+    ax.axhline(30, color=GREY, lw=0.8); ax.set_xlabel('Temperature (K)'); ax.set_ylabel('Altitude (km)'); ax.set_xlim(0, 300); ax.legend(loc='upper left', fontsize=6.5)
+    save(fig, 'fig_lapse')
+
+
 def fig_collapse():
     S = json.load(open(os.path.join(ROOT, 'results', 'similarity.json')))['ensemble']
     g = lambda k: np.array([e[k] for e in S])
@@ -244,5 +254,5 @@ def fig_sobol():
 
 if __name__ == '__main__':
     R_T = json.load(open(os.path.join(rm.HERE, 'thermo_table.json')))
-    fig_inputs(); fig_validation(); fig_trajectory(); fig_decomposition(); fig_scaling(); fig_closure(); fig_montecarlo(); fig_appendix(); fig_collapse(); fig_optimum(); fig_sobol()
+    fig_inputs(); fig_validation(); fig_trajectory(); fig_decomposition(); fig_scaling(); fig_closure(); fig_montecarlo(); fig_appendix(); fig_lapse(); fig_collapse(); fig_optimum(); fig_sobol()
     print('figures written to', OUT)

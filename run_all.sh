@@ -11,3 +11,5 @@ python -m pytest -q test_model.py
 python check_paper.py
 cd ../paper
 latexmk -pdf -interaction=nonstopmode paper.tex
+cd ../supplement
+latexmk -pdf -interaction=nonstopmode audit_2022.tex

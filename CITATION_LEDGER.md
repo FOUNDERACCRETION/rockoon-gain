@@ -48,6 +48,8 @@ okninski2016 additionally supports two statements taken from the research pass, 
 | allen1958 | RECORD (NTRS record and report title page seen; summary read) | That the drag group is the parameter of the Allen-Eggers ballistic-entry solution | **Open the report and confirm the form of the parameter before upload** |
 | sutton2017 | CARRIED (not opened) | Over-expanded sea-level nozzles; separation at an exit pressure of roughly 0.4 of ambient | **Confirm the criterion, edition and page in the book, or replace with a source you have read** |
 
+Moved to the supplement (supplement/audit_2022.tex) with the audit and regulation text, no longer cited in the paper: varghese1999, jones2018, inspace, bva, peso, msihc. iarc and the two NIOSH entries remain in the paper's safety note.
+
 Corrections applied on 18 Nov 2026 from the second research pass: Sarigul-Klijn pages 569-575; 6061-T6 276 MPa relabelled as typical; Van Allen & Gottlieb pages added. **arXiv endorsement: physics subject classes are separate endorsement domains, so a physics.gen-ph endorsement does not cover physics.app-ph.**
 
 Removed since the October draft because they could not be verified: Van Allen & Gottlieb 1954 (page range),

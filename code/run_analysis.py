@@ -161,13 +161,13 @@ def main():
     put('fallSpeed', math.sqrt(2 * 9.72 * 1000.0), '{:.0f}')
     RES['cases'] = {k: {a: float(b) if not isinstance(b, str) else b for a, b in v.items()} for k, v in cases.items()}
     for k, r in cases.items():
-        put(k + 'Ap', r['apogee'] / 1e3, '{:.0f}'); put(k + 'Tb', r['tb']); put(k + 'Hb', (r['apogee'] * 0 + r['h_b'] + {'bal': 30e3, 'gnd': 0.0, 'fall': 29e3}[k]) / 1e3)
+        put(k + 'Ap', r['apogee'] / 1e3, '{:.1f}' if k == 'gnd' else '{:.0f}'); put(k + 'Tb', r['tb']); put(k + 'Hb', (r['apogee'] * 0 + r['h_b'] + {'bal': 30e3, 'gnd': 0.0, 'fall': 29e3}[k]) / 1e3)
         put(k + 'Vb', r['v_b'], '{:.0f}'); put(k + 'Dv', r['dv_thrust'], '{:.0f}'); put(k + 'Lg', r['loss_g'], '{:.0f}')
         put(k + 'Ld', r['loss_d'], '{:.0f}'); put(k + 'Q', r['q_max'] / 1e3, '{:.1f}' if r['q_max'] < 1e4 else '{:.0f}')
         put(k + 'Eps', r['eps'], '{:.1f}' if r['eps'] > 10 else '{:.2f}'); put(k + 'Isp', r['isp_ign']); put(k + 'IspVac', r['isp_vac'])
         put(k + 'F', r['F0'] / 1e3); put(k + 'Mdot', r['mdot'], '{:.2f}'); put(k + 'Pe', r['pe'] / 1e3, '{:.1f}'); put(k + 'Tap', r['t_apogee'], '{:.0f}')
     put('gainRatio', cases['bal']['apogee'] / cases['gnd']['apogee'], '{:.1f}')
-    put('gainKm', (cases['bal']['apogee'] - cases['gnd']['apogee']) / 1e3, '{:.0f}')
+    put('gainKm', (cases['bal']['apogee'] - cases['gnd']['apogee']) / 1e3, '{:.1f}')
     put('fallCost', (cases['bal']['apogee'] - cases['fall']['apogee']) / 1e3, '{:.0f}')
     put('vmin', math.sqrt(2 * rm.GM * (1 / (rm.R_EARTH + 30e3) - 1 / (rm.R_EARTH + 100e3))), '{:.0f}')
     put('peakAccel', cases['bal']['F0'] / (M0 - MP) / rm.G0 * (1 + rm.atmosphere(30e3)[1] * cases['bal']['Ae'] / cases['bal']['F0']), '{:.1f}')
@@ -191,7 +191,8 @@ def main():
     base = dec(M0, MP, 30e3)
     RES['dec_base'] = base
     for k in ('head', 'drag', 'nozzle'):
-        put('dec' + k.title(), base[k], '{:.0f}'); put('decF' + k.title(), 100 * base['f_' + k], '{:.0f}')
+        put('dec' + k.title(), base[k], '{:.1f}'); put('decF' + k.title(), 100 * base['f_' + k], '{:.0f}')
+    put('decGain', base['gain'], '{:.1f}')
     for k, v in base['runs'].items():
         put('run' + k.replace('0', 'G').replace('1', 'B'), v, '{:.0f}')
     # spread of each contribution over the six switching orders
@@ -428,6 +429,13 @@ def main():
         Vn = mcf * 1e6 * 0.0283168466; An = (36 * math.pi) ** (1 / 3) * Vn ** (2 / 3)
         put('nasaSig' + tag, 1000 * lb * LB / An, '{:.0f}'); put('nasaM' + tag, lb * LB, '{:.0f}')
         TEX['nasaV' + tag] = thousands(round(Vn, -3)); RES['nasaV' + tag] = Vn
+    # ---- decomposition at the drag scale factors preferred by the two validation sets
+    for cds_, tag in ((RES.get('deaCdFit', 1.16), 'Dea'), (2.0, 'Two')):
+        dd = dec(M0, MP, 30e3, cd_scale=float(cds_)); RES['dec_cd' + tag] = dd
+        put('cd' + tag + 'Gnd', dd['ground'], '{:.1f}'); put('cd' + tag + 'Bal', dd['balloon'], '{:.0f}')
+        put('cd' + tag + 'Ratio', dd['balloon'] / dd['ground'], '{:.1f}')
+        for k in ('head', 'drag', 'nozzle'):
+            put('cd' + tag + 'F' + k.title(), 100 * dd['f_' + k], '{:.0f}')
     # ---- ground nozzle allowed to over-expand (exit pressure down to a fraction `sep` of ambient)
     SEPS = (1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4)
     sw = [(sp_, rm.vehicle_run(M0, MP, 0.0, sep=sp_)) for sp_ in SEPS]
@@ -567,6 +575,46 @@ def main():
         rows.append('%s & %.0f & %s & %.1f & %.1f & %s & %.0f & %s \\\\' % ('Al' if o['mat'].startswith('Al') else 'steel', o['mfix'], thousands(o['ground']), o['zstar'], o['zgrid'], thousands(o['total_grid']), o['rocket'], thousands(round(o['V'], -1))))
     with open(os.path.join(ROOT, 'paper', 'tab_optimum.tex'), 'w') as f:
         f.write('\n'.join(rows) + '\n')
+    # optimum under a load-scaled envelope and with a thermal jacket (recomputed from the closed vehicles)
+    def fam_opt(v, tot):
+        z = np.array([r['z'] for r in v]); tot = np.asarray(tot)
+        i = int(np.argmin(tot[1:])) + 1
+        if 1 < i < len(z) - 1:
+            c = np.polyfit(z[i - 1:i + 2], tot[i - 1:i + 2], 2); return -c[1] / (2 * c[0]), float(np.polyval(c, -c[1] / (2 * c[0]))), tot[0]
+        return z[i], tot[i], tot[0]
+    base_fams = {k: sorted(v, key=lambda r: r['z']) for k, v in fam.items() if k[3:] == (0.030, 0.10) and k[2] == 100e3 and all(r['m0'] is not None for r in v)}
+    def variant(k_load=0.0, thermal=False):
+        out = []
+        for (mat, mfix, *_), v in sorted(base_fams.items()):
+            tot = []
+            for r in v:
+                if r['z'] == 0:
+                    tot.append(r['m0']); continue
+                ms = 1.10 * r['m0'] + (rm.insulation_mass(r['mp'], r['z'] * 1e3)[0] if thermal else 0.0)
+                V_, me_, mg_ = rm.balloon(ms, r['z'] * 1e3, k_load=k_load)
+                tot.append(ms + me_ + 1.1 * mg_)
+            zs_, ts_, g_ = fam_opt(v, tot)
+            out.append(dict(mat=mat, mfix=mfix, zstar=float(zs_), save=float(1 - ts_ / g_), ground=float(g_)))
+        return out
+    chk = variant()
+    assert max(abs(a_['zstar'] - b_['zstar']) for a_, b_ in zip(chk, sorted(o100, key=lambda o: (o['mat'], o['mfix'])))) < 1e-6
+    RES['optimum_kload'] = {}
+    for kl, tag in ((0.05, 'KlA'), (0.10, 'KlB'), (0.20, 'KlC')):
+        vv = variant(k_load=kl); RES['optimum_kload'][str(kl)] = vv
+        put('zs' + tag + 'Lo', min(o['zstar'] for o in vv), '{:.0f}'); put('zs' + tag + 'Hi', max(o['zstar'] for o in vv), '{:.0f}')
+        put('zs' + tag + 'SaveLo', 100 * min(o['save'] for o in vv), '{:.0f}'); put('zs' + tag + 'SaveHi', 100 * max(o['save'] for o in vv), '{:.0f}')
+        al = [o for o in vv if o['mat'] == 'Al6061T6']
+        put('zs' + tag + 'Slope', np.polyfit([math.log(o['ground']) for o in al], [o['zstar'] for o in al], 1)[0] * math.log(10), '{:.1f}')
+    vv = variant(thermal=True); RES['optimum_thermal'] = vv
+    put('zsThLo', min(o['zstar'] for o in vv), '{:.0f}'); put('zsThHi', max(o['zstar'] for o in vv), '{:.0f}')
+    put('zsThShift', max(abs(a_['zstar'] - b_['zstar']) for a_, b_ in zip(vv, chk)), '{:.2f}')
+    put('zsThSaveLo', 100 * min(o['save'] for o in vv), '{:.0f}'); put('zsThSaveHi', 100 * max(o['save'] for o in vv), '{:.0f}')
+    jk = [(rm.insulation_mass(r['mp'], 20e3), r) for k_, v in base_fams.items() for r in v if r['z'] == 20.0]
+    put('insFracHi', 100 * max(m_[0] / r['m0'] for m_, r in jk), '{:.1f}'); put('insFracLo', 100 * min(m_[0] / r['m0'] for m_, r in jk), '{:.2f}')
+    put('insThickReq', 1e3 * max(rm.insulation_mass(r['mp'], 20e3, t_min=0.0)[1] for _, r in jk), '{:.0f}')
+    b_ = [r for r in base_fams[('Al6061T6', 80.0, 100e3, 0.030, 0.10)] if r['z'] == 17.5][0]
+    put('insBase', rm.insulation_mass(b_['mp'], 17.5e3)[0], '{:.1f}')
+
     # Sobol
     RES['sobol'] = S['sobol']
     sb = {x['z']: x for x in S['sobol']}

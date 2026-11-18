@@ -15,14 +15,14 @@ w('tab_deacon.tex', ['%d & %.1f & %.1f & %.0f & %.0f & %+.1f \\\\' % (x['round']
                      for x in R['deacon_rounds']])
 lab = {'000': 'ground & ground & ground', '100': '30 km & ground & ground', '010': 'ground & 30 km & ground', '001': 'ground & ground & 30 km',
        '110': '30 km & 30 km & ground', '101': '30 km & ground & 30 km', '011': 'ground & 30 km & 30 km', '111': '30 km & 30 km & 30 km'}
-w('tab_runs.tex', ['%s & %.0f \\\\' % (lab[k], R['dec_base']['runs'][k]) for k in ('000', '100', '010', '001', '110', '101', '011', '111')])
+w('tab_runs.tex', ['%s & %.1f \\\\' % (lab[k], R['dec_base']['runs'][k]) for k in ('000', '100', '010', '001', '110', '101', '011', '111')])
 rows = []
 for r in R['dec_alt']:
-    rows.append('%.0f & %.0f & %.0f & %.1f & %.0f & %.0f & %.0f \\\\' % (r['zf'] / 1e3, r['ground'], r['balloon'], r['balloon'] / r['ground'], 100 * r['f_drag'], 100 * r['f_nozzle'], 100 * r['f_head']))
+    rows.append('%.0f & %.1f & %.0f & %.1f & %.0f & %.0f & %.0f \\\\' % (r['zf'] / 1e3, r['ground'], r['balloon'], r['balloon'] / r['ground'], 100 * r['f_drag'], 100 * r['f_nozzle'], 100 * r['f_head']))
 w('tab_dec_alt.tex', rows)
 rows = []
 for r in R['dec_mass']:
-    rows.append('%.0f & %.2f & %.0f & %.0f & %.0f & %.1f & %.0f & %.0f & %.0f \\\\' % (r['m0'], rm.diameter(r['m0']), r['beta'], r['ground'], r['balloon'], r['balloon'] / r['ground'], 100 * r['f_drag'], 100 * r['f_nozzle'], 100 * r['f_head']))
+    rows.append('%.0f & %.2f & %.0f & %.1f & %.0f & %.1f & %.0f & %.0f & %.0f \\\\' % (r['m0'], rm.diameter(r['m0']), r['beta'], r['ground'], r['balloon'], r['balloon'] / r['ground'], 100 * r['f_drag'], 100 * r['f_nozzle'], 100 * r['f_head']))
 w('tab_dec_mass.tex', rows)
 rows = []
 al = {r['z']: r for r in R['closure']['Al_80']}; ss = {r['z']: r for r in R['closure']['SS_80']}
@@ -38,6 +38,6 @@ for x in R['alt_cost']:
 w('tab_altcost.tex', rows)
 rows = []
 for r in R['dec_pc']:
-    rows.append('%.0f & %.1f & %.0f & %.0f & %.0f & %.0f & %.0f & %.1f & %.0f & %.0f & %.0f \\\\' % (r['pc'], r['eps_g'], r['eps_b'], r['isp_g'], r['isp_b'], r['ground'], r['balloon'], r['balloon'] / r['ground'], 100 * r['f_drag'], 100 * r['f_nozzle'], 100 * r['f_head']))
+    rows.append('%.0f & %.1f & %.0f & %.0f & %.0f & %.1f & %.0f & %.1f & %.0f & %.0f & %.0f \\\\' % (r['pc'], r['eps_g'], r['eps_b'], r['isp_g'], r['isp_b'], r['ground'], r['balloon'], r['balloon'] / r['ground'], 100 * r['f_drag'], 100 * r['f_nozzle'], 100 * r['f_head']))
 w('tab_pc.tex', rows)
 print('tables written')

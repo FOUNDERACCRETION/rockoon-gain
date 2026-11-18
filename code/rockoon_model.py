@@ -62,14 +62,35 @@ def lapse_extrapolation(z, lapse=6.49e-3):
 
 
 # ------------------------------------------------------------------- balloon
-def balloon(m_susp, z, M_gas=M_H2, sigma=0.030):
-    """Zero-pressure balloon at float: volume, envelope mass, gas mass."""
+def balloon(m_susp, z, M_gas=M_H2, sigma=0.030, k_load=0.0):
+    """Zero-pressure balloon at float: volume, envelope mass, gas mass.
+
+    Envelope mass = sigma * (area of the equal-volume sphere) + k_load * m_susp; the second term
+    stands for load tapes and film that are sized by the suspended load rather than by the area."""
     T, p, _ = atmosphere(z)
     dens = p * (M_AIR - M_gas) / (RSTAR * T)
     k = sigma * (36.0 * math.pi) ** (1.0 / 3.0)
-    V = brentq(lambda V: V * dens - m_susp - k * V ** (2.0 / 3.0), 1e-3, 1e9)
-    m_env = k * V ** (2.0 / 3.0)
+    V = brentq(lambda V: V * dens - (1.0 + k_load) * m_susp - k * V ** (2.0 / 3.0), 1e-3, 1e9)
+    m_env = k * V ** (2.0 / 3.0) + k_load * m_susp
     return V, m_env, (m_susp + m_env) * M_gas / (M_AIR - M_gas)
+
+
+def insulation_mass(mp, z_float, of=2.4, rate=5.0, hold=1800.0, T0=293.15, dT=25.0, c=1500.0,
+                    k_ins=0.030, rho_ins=35.0, t_min=0.025):
+    """Mass of a foam jacket that keeps the propellant above freezing during ascent and float.
+
+    N2O4 freezes at about -11 C, so the propellant may cool by dT from T0. The jacket covers two
+    spherical tanks, conducts heat to the local air temperature (no outer film resistance, no
+    radiation, propellant held at T0: all conservative), and is released with the gondola at ignition.
+    Returns (mass, thickness, heat-leak integral in K s)."""
+    vf = (1.0 / (1.0 + of)) / RHO_UDMH * mp
+    vo = (of / (1.0 + of)) / RHO_NTO * mp
+    A = sum((36.0 * math.pi) ** (1.0 / 3.0) * v ** (2.0 / 3.0) for v in (vf, vo))
+    zs = np.linspace(0.0, z_float, 400)
+    Ta = np.array([atmosphere(z)[0] for z in zs])
+    I = np.trapezoid(T0 - Ta, zs) / rate + (T0 - Ta[-1]) * hold
+    t = max(k_ins * A * I / (mp * c * dT), t_min)
+    return rho_ins * A * t, t, I
 
 
 # ------------------------------------------------------------ thermochemistry

@@ -19,6 +19,8 @@ for mode in ('standard', 'online'):
     for _ in range(3):
         subprocess.run(['pdflatex', '-interaction=nonstopmode', 'nhsjs.tex'], stdout=subprocess.DEVNULL)
     shutil.copy('nhsjs.pdf', 'nhsjs_%s.pdf' % mode)
+    pages = int(re.search(r'Pages:\s+(\d+)', subprocess.run(['pdfinfo', 'nhsjs.pdf'], capture_output=True, text=True).stdout).group(1))
+    print('%s: %d pages%s' % (mode, pages, '  ** OVER THE NHSJS 20-PAGE LIMIT **' if pages > 20 else ' (limit 20)'))
     print(mode, 'built;', len(order), 'references cited')
 for f in ('nhsjs.aux', 'nhsjs.log', 'nhsjs.out', 'nhsjs.pdf'):
     if os.path.exists(f):
