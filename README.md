@@ -8,7 +8,7 @@ Code and manuscript for "Attributing the rockoon advantage and the mass-optimal 
                                  # values (NACA Deacon, NASA Super Loki, propellant benchmark), headline
                                  # results against results.json, unit tests, paper consistency
     python validate.py --full    # also regenerates every result in a temporary copy and compares
-                                 # the generated LaTeX files byte for byte (about 9 minutes; 45 checks)
+                                 # the generated LaTeX files byte for byte (about 9 minutes; 46 checks)
 
 ## Reproduce everything
 
