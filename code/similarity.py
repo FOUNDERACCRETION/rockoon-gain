@@ -93,6 +93,7 @@ def main():
         ST = [float(np.mean((fA - y[k, 2 + i]) ** 2) / (2.0 * var)) for i in range(4)]
         sob.append(dict(z=z, S=S, ST=ST, mean=float(np.mean(fA)) / 1e3, sd=float(np.std(fA)) / 1e3,
                         piz=CD_REF * math.pi * 0.04 * rm.atmosphere(z * 1e3)[1] / (301.27 * rm.G0)))
+    os.makedirs(os.path.join(ROOT, 'results'), exist_ok=True)
     with open(os.path.join(ROOT, 'results', 'similarity.json'), 'w') as f:
         json.dump(dict(ensemble=ens, system=sysm, sobol=sob), f, default=float)
     print(len(ens), 'vehicles;', len(sysm), 'closure points;', len(jobs), 'Sobol runs')
