@@ -412,11 +412,13 @@ Tanks & $m_{\mathrm{fix}}$ & Ground-launched & $z^{*}$ & Launched mass & Rocket 
 \subsection{Robustness of the comparison}
 \label{sec:robust}
 
-Two choices in the comparison above favour the balloon, and we test both.
+Two choices in the comparison above favour the balloon, and a third is uncertain. We test all three.
 
 First, the ground-launched vehicle has so far been the balloon vehicle with a different nozzle. A vehicle designed for ground launch would be slimmer. Taking the baseline body to have a length-to-diameter ratio of 10, we let each vehicle choose its own ratio between 10 and 20 at constant volume, and its own thrust-to-weight ratio up to \R{twMax} (a burnout acceleration of 15\,$g$). The ground-launched vehicle then prefers the slimmest body (\R{optGndD}\,m) and a thrust-to-weight ratio of \R{optGndTw}, and reaches \R{optGndAp}\,km. The balloon-launched vehicle keeps the 0.40\,m body, whose larger base allows a larger nozzle, takes a thrust-to-weight ratio of \R{optBalTw}, and reaches \R{optBalAp}\,km. With each vehicle designed for its own launch the ratio is \R{optRatio} instead of \R{gainRatio}, and the gain is \R{optGain}\,km instead of \R{gainKm}\,km. If both vehicles use the slim \R{slimD}\,m body, the apogees are \R{slimGnd} and \R{slimBal}\,km and the shares are \R{slimFDrag}\% drag, \R{slimFNozzle}\% nozzle and \R{slimFHead}\% head start. Drag remains the largest term, but by a smaller margin.
 
 Second, the nozzle term depends on the chamber pressure, because a higher pressure allows a larger area ratio on the ground. Table~\ref{tab:pc} repeats the calculation at 1, 2 and 4\,MPa. The nozzle share falls from \R{pcOneFNozzle}\% at 1\,MPa to \R{pcFourFNozzle}\% at 4\,MPa and the apogee ratio from \R{pcOneRatio} to \R{pcFourRatio}. The ordering of the three terms does not change.
+
+Third, the drag curve of the baseline vehicle is assumed. As a check on its shape we replaced it by the tabulated curve of a real sounding rocket, the booster-plus-dart configuration of the Super Loki \cite{bollermann1968}, which has a much higher transonic and supersonic drag coefficient (0.93 between Mach 0.8 and 1.4). The ground-launched apogee changes by \R{acGndChange}\% to \R{acGnd}\,km and the balloon-launched one by \R{acBalChange}\% to \R{acBal}\,km. The shares become \R{acFDrag}\% drag, \R{acFNozzle}\% nozzle and \R{acFHead}\% head start. The balloon-launched result does not depend on the drag curve; the ground-launched one, and with it the apogee ratio (\R{acRatio}), does. A drag curve computed for the actual geometry would narrow this, and we have not done that.
 
 \begin{table}[t]
 \centering

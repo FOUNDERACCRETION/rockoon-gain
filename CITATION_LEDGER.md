@@ -21,11 +21,14 @@ Every entry must reach "checked by an author against the original" before upload
 | astronautix | RECORD (read by the research pass, not re-opened) | 285 s, 3415 K, 1720 m/s at O/F 2.61 | Open the page; better, replace with a primary table (e.g. Sutton) once checked in print |
 | nioshudmh, nioshno2 | OPENED | Exposure limits, vapour pressure, flash point, flammable range | none |
 | nist | OPENED | Liquid enthalpies of formation: UDMH 48.3 kJ/mol, N2O4 -19.56 kJ/mol | none |
-| ussa1976, gordon1994, mcbride2002, scipy | CARRIED (standard references) | Atmosphere, method, data, integrator | Confirm each record |
+| gordon1994, mcbride2002 | RECORD (NTRS listings seen 18 Nov 2026) | CEA method; thermodynamic data | none |
+| ussa1976, scipy | CARRIED (standard references) | Atmosphere; integrator | Confirm each record |
 | cantera | OPENED | Software version and DOI (Zenodo record is version 3.2.0) | none |
 | csbf | OPENED | 0.002 cm film thickness | none |
 | asm, astm | CARRIED | Yield strengths 276 MPa and 205 MPa | Confirm values and editions |
-| varghese1999, jones2018, iarc | CARRIED | Audit appendix and hazards | Confirm each |
+| varghese1999 | RECORD (journal page seen) | Vol. 49, No. 1, pp. 71-78; 316.7 s at O/F 1.5 for the 30 % Al gel | none |
+| jones2018 | RECORD (NTRS copy seen) | ICES-2018-81; Falcon 9 about USD 2,720 per kg | none |
+| iarc | RECORD (IARC and NCBI pages seen) | Vol. 71 (1999); 1,1-dimethylhydrazine Group 2B | none |
 | inspace, bva, peso, msihc | CARRIED | Regulatory paragraph | Confirm each, or cut the paragraph |
 | bollermann1968 | OPENED (machine-read PDF) | Super Loki Dart masses, thrust, drag tables, computed trajectory (113.4 km), White Sands flights about 125 km | **Check the drag tables and Table 3.1-3.3 against the scan**; the Mach 2.50 entry was illegible and is not used |
 | sarigul2005 | OPENED (full text, author-uploaded copy, read 18 Nov 2026) | Loss terms in the velocity budget; Minotaur 36,200 kg; altitudes to 30,490 m; Mach 0-3; >160 POST runs; nozzle kept at 10:1; very little improvement above 15,240 m. No similarity parameter, no attribution, no balloon mass, orbital only | **Page range**: the text read runs 569-572, but ResearchGate and Google Scholar list 569-575. Confirm on the AIAA page and correct if needed |

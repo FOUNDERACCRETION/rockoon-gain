@@ -281,7 +281,7 @@ def fly2d(m0, mp, area, thrust, tb, cd_fn, elev_deg, z0=0.0, m2=None, area2=None
 
 
 def fly(m0, mp, d, mdot, isp_vac, Ae, z_kin=0.0, z_drag=None, z_noz=None, v0=0.0,
-        cd_scale=1.0, elev_deg=90.0, drag=True, coast=True, trace=False):
+        cd_scale=1.0, elev_deg=90.0, drag=True, coast=True, trace=False, cd_fn=None):
     """Point-mass flight along a straight line of elevation elev_deg.
 
     Altitude is z_kin + h. Drag is evaluated in the atmosphere at z_drag + h and the nozzle
@@ -302,7 +302,7 @@ def fly(m0, mp, d, mdot, isp_vac, Ae, z_kin=0.0, z_drag=None, z_noz=None, v0=0.0
         D = 0.0
         if drag and v != 0.0:
             Mach = abs(v) / math.sqrt(1.4 * RSTAR / M_AIR * T)
-            D = 0.5 * rho * v * abs(v) * cd_scale * cd_generic(Mach) * A
+            D = 0.5 * rho * v * abs(v) * cd_scale * (cd_fn or cd_generic)(Mach) * A
         if burning:
             F = Fv - atmosphere(z_noz + h)[1] * Ae
             return [v * se, (F - D) / m - g, -mdot, g, D / m, F / m, 0.5 * rho * v * v, 0.0]
@@ -341,19 +341,19 @@ def diameter(m0, d_ref=0.40, m_ref=301.27, fineness=10.0):
     return d_ref * (m0 / m_ref) ** (1.0 / 3.0) * (10.0 / fineness) ** (1.0 / 3.0)
 
 
-def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle'):
+def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle', cd_fn=None):
     """Design the nozzle for the ignition altitude and fly. switches = (kin, drag, nozzle) booleans
     selecting the balloon (True) or ground (False) environment for each effect."""
     d = diameter(m0) if d is None else d
     F = tw * m0 * G0
     if switches is None:
         nz = Nozzle(z_ign, F, d, eta, key)
-        r = fly(m0, mp, d, nz.mdot, nz.isp_vac, nz.Ae, z_kin=z_ign, cd_scale=cd_scale, v0=v0)
+        r = fly(m0, mp, d, nz.mdot, nz.isp_vac, nz.Ae, z_kin=z_ign, cd_scale=cd_scale, v0=v0, cd_fn=cd_fn)
     else:
         k, dr, n = switches
         nz = Nozzle(z_ign if n else 0.0, F, d, eta, key)
         r = fly(m0, mp, d, nz.mdot, nz.isp_vac, nz.Ae, z_kin=z_ign if k else 0.0,
-                z_drag=z_ign if dr else 0.0, z_noz=z_ign if n else 0.0, cd_scale=cd_scale)
+                z_drag=z_ign if dr else 0.0, z_noz=z_ign if n else 0.0, cd_scale=cd_scale, cd_fn=cd_fn)
     r.update(eps=nz.eps, pe=nz.pe, Ae=nz.Ae, mdot=nz.mdot, isp_vac=nz.isp_vac, limit=nz.limit, d=d)
     return r
 

@@ -329,6 +329,14 @@ def main():
     put('lokiImp', 8900 * 4.4482216 / 1e3, '{:.1f}'); put('lokiF', F_sl / 1e3, '{:.1f}')
     A_l = 85.47e-4
     put('lokiPiZero', 0.5 * A_l * 101325.0 / (28.32 * rm.G0), '{:.1f}')
+    # ---- robustness to the shape of the drag curve: NASA CR-61238 booster-plus-dart table in place of the generic curve
+    alt = dec(M0, MP, 30e3, cd_fn=rm.cd_superloki)
+    alt.pop('cd_fn', None)
+    RES['dec_altcurve'] = alt
+    put('acGnd', alt['ground'], '{:.0f}'); put('acBal', alt['balloon'], '{:.0f}'); put('acRatio', alt['balloon'] / alt['ground'], '{:.1f}')
+    for k in ('head', 'drag', 'nozzle'):
+        put('acF' + k.title(), 100 * alt['f_' + k], '{:.0f}')
+    put('acBalChange', 100 * (alt['balloon'] / base['balloon'] - 1), '{:+.1f}'); put('acGndChange', 100 * (alt['ground'] / base['ground'] - 1), '{:+.0f}')
     # ---- similarity study (results/similarity.json, written by similarity.py)
     S = json.load(open(os.path.join(ROOT, 'results', 'similarity.json')))
     E = S['ensemble']
