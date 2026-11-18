@@ -11,7 +11,7 @@ Every entry must reach "checked by an author against the original" before upload
 |---|---|---|---|
 | ludwig2004 | OPENED (machine-read PDF) | 28 Aug 1952 flight: fired 38,000 ft, summit about 200,000 ft (p. 8); cost < USD 1800 vs about USD 25,000 Aerobee (p. 7) | Read pp. 7-8 yourself |
 | watson1949 | OPENED (OCR text, garbled in places) | Table I gross weights, impulses, max velocities for rounds 2-9; 70 deg launch; 6.75 in drag diameter; max velocity at 2.9 s (round 6); propellant about 103 lb; rounds 8-9 at lower grain temperature | **Check every Table I number against the scanned page.** Propellant weight and grain temperatures were only partly legible |
-| okninski2016 | OPENED (abstract page, truncated) | Solid-propellant rockoon to 100 km; low-mass designs advantageous | Read the full paper for its quantitative results |
+| okninski2016 | OPENED by the research pass (full text, author-uploaded copy); abstract page opened separately | 20-40 km launch altitudes, 15 deg planar trajectory, latex balloon clusters, 0.92 Isp factor, nozzle exit limited to stage diameter, total fin span 3d, "highest launch altitude best", negligible relative wind under the balloon | **An author must read the full paper** and confirm each of these statements; the research pass noted an inconsistency between its Tables 3 and 4 |
 | li2022 | RECORD (publisher page blocked) | Multi-stage rockoon optimisation for orbit | Confirm authors, volume, pages on the SAGE page |
 | jorda2012 | RECORD (IAF listing) | Rockoons for small satellites | Confirm paper code |
 | shoyama2021 | OPENED | Suspended rail launcher, azimuth control | none |
@@ -31,16 +31,21 @@ Every entry must reach "checked by an author against the original" before upload
 | iarc | RECORD (IARC and NCBI pages seen) | Vol. 71 (1999); 1,1-dimethylhydrazine Group 2B | none |
 | inspace, bva, peso, msihc | CARRIED | Regulatory paragraph | Confirm each, or cut the paragraph |
 | bollermann1968 | OPENED (machine-read PDF) | Super Loki Dart masses, thrust, drag tables, computed trajectory (113.4 km), White Sands flights about 125 km | **Check the drag tables and Table 3.1-3.3 against the scan**; the Mach 2.50 entry was illegible and is not used |
-| sarigul2005 | OPENED (full text, author-uploaded copy, read 18 Nov 2026) | Loss terms in the velocity budget; Minotaur 36,200 kg; altitudes to 30,490 m; Mach 0-3; >160 POST runs; nozzle kept at 10:1; very little improvement above 15,240 m. No similarity parameter, no attribution, no balloon mass, orbital only | **Page range**: the text read runs 569-572, but ResearchGate and Google Scholar list 569-575. Confirm on the AIAA page and correct if needed |
+| sarigul2005 | OPENED (full text, author-uploaded copy) | Loss terms; Minotaur 36,200 kg; altitudes to 30,490 m; Mach 0-3; >160 POST runs; nozzle kept at 10:1; very little improvement above 15,240 m | Page range now 569-575 (AIAA table of contents, via the research pass); the copy read ends its text on p. 572. Confirm on the AIAA page |
 | shapley1953, saltelli2010 | CARRIED (standard references, not opened) | Attribution method; Sobol estimator | Confirm each record. The code uses the Jansen-type estimators described in Saltelli et al. |
 
 okninski2016 additionally supports two statements taken from the research pass, not from my own reading: exit diameter capped at body diameter, and "highest launch altitude best". Confirm both in the full text.
-| shoyama2022 | RECORD (library and index records; abstract only) | Hybrid rockoon concept and performance study, J. Spacecr. Rockets 59(1), 286-294 | **Read it**: it is a rockoon performance study and may overlap the launch-altitude results |
+| shoyama2022 | RECORD + abstract | Hybrid rockoon study; abstract attributes the gain to a larger nozzle expansion ratio | **Read the full paper** before upload; contents beyond the abstract are not described in the manuscript |
 | corliss1971 | RECORD (NASA and NTRS pages) | Sounding-rocket history | Confirm it mentions the 1952 rockoons where cited |
-| vanallen1954, vanallen1959 | RECORD (author's publication list) | Original descriptions; the paper says they were not consulted | Obtain if possible; page range of the 1954 chapter not confirmed and so not given |
+| vanallen1954, vanallen1959 | RECORD (author's publication list) | Original descriptions; the paper says they were not consulted. 1954 chapter pp. 53-64, 1959 chapter pp. 143-164 | Obtain if possible |
 | yajima2009 | RECORD (publisher page) | Zero-pressure balloon principles | none |
-| niskanen2009 | RECORD (OpenRocket documentation pages) | Component build-up drag method, cited as not used | Confirm the thesis year |
+| niskanen2013, niskanen2009 | OPENED (technical documentation v13.05, Chapter 3 and Appendix B, machine-read) | Drag build-up equations 3.78-3.94 and the tangent-ogive rule of Appendix B, as implemented in DragBuildUp | **Check each implemented equation against the PDF**; the interpolation between Mach 1 and 1.3 is our cubic through the stated end values and slopes, and the subsonic nose term is fitted at Mach 1 |
 | jansen1999 | RECORD (first page seen) | Sobol estimators used in the code | none |
+| janhunen2018 | RECORD + research pass (full text) | 18 km chosen qualitatively for a steam-balloon launcher | Confirm authors and that it is cited as an arXiv preprint only |
+| nasaldb | OPENED (machine-read PDF) | NASA 29.47 and 59.84 MCF balloons: 3600 lb and 2751 lb, 0.8 and 0.4 mil film | Document carries no number; title taken from its heading. Confirm |
+| nist (helium) | OPENED | Helium density 43.571 kg/m3 at 290 K, 30 MPa | none |
+
+Corrections applied on 18 Nov 2026 from the second research pass: Sarigul-Klijn pages 569-575; 6061-T6 276 MPa relabelled as typical; Van Allen & Gottlieb pages added. **arXiv endorsement: physics subject classes are separate endorsement domains, so a physics.gen-ph endorsement does not cover physics.app-ph.**
 
 Removed since the October draft because they could not be verified: Van Allen & Gottlieb 1954 (page range),
 NASA NSS 1740.16 (cancelled standard; hydrogen flammability numbers dropped), McDowell 2018, the USC news

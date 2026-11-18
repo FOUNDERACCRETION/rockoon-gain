@@ -358,6 +358,36 @@ def main():
         put('tiltRatio' + tag, row['bal_fixed'] / row['gnd_turn'], '{:.1f}'); put('tiltRange' + tag, row['bal_fixed_range'], '{:.0f}')
     with open(os.path.join(ROOT, 'paper', 'tab_tilt.tex'), 'w') as f:
         f.write('\n'.join('%d & %.0f & %.0f & %.0f & %.0f & %.0f & %.1f \\\\' % (r['tilt'], r['bal_fixed'], r['bal_fixed_range'], r['bal_turn'], r['bal_turn_range'], r['gnd_turn'], r['bal_fixed'] / r['gnd_turn']) for r in tilt) + '\n')
+    # ---- drag curve computed by component build-up for a defined geometry
+    bu = rm.DragBuildUp()
+    Ms = [0.3, 0.8, 1.05, 2.0, 3.0, 5.0]
+    T0_, p0_, r0_ = rm.atmosphere(0.0); a0_ = math.sqrt(1.4 * 287.05 * T0_)
+    ratios = [bu(M_, r0_, T0_, M_ * a0_) / rm.cd_generic(M_) for M_ in np.linspace(0.1, 5.0, 99)]
+    put('buRatioLo', min(ratios), '{:.2f}'); put('buRatioHi', max(ratios), '{:.2f}')
+    sup = [bu(M_, r0_, T0_, M_ * a0_) / rm.cd_generic(M_) for M_ in np.linspace(1.5, 5.0, 36)]
+    put('buSupLo', min(sup), '{:.2f}'); put('buSupHi', max(sup), '{:.2f}')
+    put('buPeak', max(bu(M_, r0_, T0_, M_ * a0_) for M_ in np.linspace(0.9, 1.3, 81)), '{:.2f}')
+    put('buSub', bu(0.3, r0_, T0_, 0.3 * a0_), '{:.2f}'); put('buFive', bu(5.0, r0_, T0_, 5.0 * a0_), '{:.2f}')
+    bd = dec(M0, MP, 30e3, cd_fn=bu); bd.pop('cd_fn', None)
+    RES['dec_buildup'] = bd
+    put('buGnd', bd['ground'], '{:.0f}'); put('buBal', bd['balloon'], '{:.0f}'); put('buRatio', bd['balloon'] / bd['ground'], '{:.1f}')
+    for k in ('head', 'drag', 'nozzle'):
+        put('buF' + k.title(), 100 * bd['f_' + k], '{:.0f}')
+    put('buGndChange', 100 * (bd['ground'] / base['ground'] - 1), '{:+.0f}'); put('buBalChange', 100 * (bd['balloon'] / base['balloon'] - 1), '{:+.2f}')
+    put('buWetBody', bu.Awb, '{:.2f}'); put('buWetFins', bu.Awf, '{:.2f}')
+    # ---- real-gas helium (NIST WebBook, 290 K): density 43.571 kg/m3 at 30 MPa
+    Zhe = 30e6 / (43.571 * rm.R_HE * 290.0)
+    put('heZ', Zhe, '{:.3f}')
+    mhe_, mb_, _ = rm.pressurant(3e6, 2.4, 30e6, 3.6e6, 2700.0, 276e6)
+    fAl_rg = 1.5 * rm.tank_fraction(3e6, 2.4, 2700.0, 276e6) + mhe_ + Zhe * mb_
+    put('feedAlRg', fAl_rg, '{:.3f}')
+    crg = rm.close_vehicle(30e3, 80.0, fAl_rg); crg0 = rm.close_vehicle(0.0, 80.0, fAl_rg)
+    put('cBalMRg', crg['m0'], '{:.0f}'); put('cGndMRg', crg0['m0'], '{:.0f}')
+    # ---- NASA zero-pressure balloons: effective areal density on the equal-volume sphere
+    for tag, mcf, lb in (('A', 29.47, 3600.0), ('B', 59.84, 2751.0)):
+        Vn = mcf * 1e6 * 0.0283168466; An = (36 * math.pi) ** (1 / 3) * Vn ** (2 / 3)
+        put('nasaSig' + tag, 1000 * lb * LB / An, '{:.0f}'); put('nasaM' + tag, lb * LB, '{:.0f}')
+        TEX['nasaV' + tag] = thousands(round(Vn, -3)); RES['nasaV' + tag] = Vn
     # ---- similarity study (results/similarity.json, written by similarity.py)
     S = json.load(open(os.path.join(ROOT, 'results', 'similarity.json')))
     E = S['ensemble']

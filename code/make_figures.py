@@ -32,7 +32,12 @@ def fig_inputs():
     M = np.linspace(0, 6, 400); cd = np.array([rm.cd_generic(m) for m in M])
     ax[0].fill_between(M, 0.8 * cd, 1.2 * cd, color=BLUE, alpha=0.18, lw=0, label='scale factor 0.8-1.2')
     ax[0].plot(M, cd, color=BLUE, label='assumed curve')
-    ax[0].set_xlabel('Mach number'); ax[0].set_ylabel('Drag coefficient $C_D$'); ax[0].set_ylim(0, 0.7); ax[0].legend(loc='upper right')
+    bu = rm.DragBuildUp()
+    for z_, ls, lab in ((0.0, '-', 'build-up, sea level'), (30e3, '--', 'build-up, 30 km')):
+        T_, p_, r_ = rm.atmosphere(z_); a_ = math.sqrt(1.4 * 287.05 * T_)
+        ax[0].plot(M[5:], [bu(m, r_, T_, m * a_) for m in M[5:]], color=ORANGE, ls=ls, lw=1.1, label=lab)
+    ax[0].plot(M, [rm.cd_superloki(m) for m in M], color=GREY, lw=0.9, ls=':', label='Super Loki table')
+    ax[0].set_xlabel('Mach number'); ax[0].set_ylabel('Drag coefficient $C_D$'); ax[0].set_ylim(0, 1.0); ax[0].legend(loc='upper right', fontsize=6.3)
     nz = rm.table()['nozzle']
     ax[1].semilogx(nz['eps'], 0.92 * nz['isp_vac'], color=BLUE)
     for key, col, lab in (('gnd', GREEN, 'ground'), ('bal', ORANGE, '30 km')):

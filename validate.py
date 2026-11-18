@@ -88,6 +88,9 @@ def headline():
     check(g, 'planar model at zero tilt = vertical model', p2['apogee'] / 1e3, b['apogee'] / 1e3, 1e-4, 'km')
     a11 = rm.fly(301.27, 151.27, 0.40, nb.mdot, nb.isp_vac, nb.Ae, z_kin=30e3, rtol=1e-11)['apogee']
     check(g, 'integrator converged (tolerance 1e-8 vs 1e-11)', b['apogee'], a11, 1e-6, 'm')
+    bu = rm.DragBuildUp(); T0, p0, r0 = rm.atmosphere(0.0); a0 = math.sqrt(1.4 * 287.05 * T0)
+    worst = max(abs(bu(m, r0, T0, m * a0) / rm.cd_generic(m) - 1.0) for m in (2.0, 3.0, 4.0, 5.0))
+    flag(g, 'assumed drag curve within 20% of the computed build-up for Mach 2-5', worst <= 0.20, 'largest difference %.0f%%' % (100 * worst))
     sob = R['sobol']
     flag(g, 'Sobol first-order indices sum to <= 1 at every altitude', all(sum(x['S']) <= 1.02 for x in sob),
          'max sum %.2f' % max(sum(x['S']) for x in sob))

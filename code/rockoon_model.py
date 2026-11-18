@@ -280,6 +280,89 @@ def fly2d(m0, mp, area, thrust, tb, cd_fn, elev_deg, z0=0.0, m2=None, area2=None
     return out
 
 
+# ---------------------------------------------------- component drag build-up
+class DragBuildUp:
+    """Zero-lift drag by the component build-up of the OpenRocket technical documentation
+    (Niskanen, version 13.05): skin friction Eqs. 3.78-3.85, tangent-ogive nose pressure drag
+    from the conical profile (Appendix B), fin leading- and trailing-edge drag Eqs. 3.89-3.93,
+    and base drag Eq. 3.94. The method is stated for Mach numbers up to about 5.
+    All coefficients are referred to the body cross-section."""
+    full = True
+
+    def __init__(self, d=0.40, length=4.0, nose=1.2, n_fins=4, span=0.40, c_root=0.60, c_tip=0.30,
+                 thick=0.010, sweep_deg=30.0, rough=20e-6):
+        self.d, self.L, self.rough = d, length, rough
+        self.Aref = math.pi * d * d / 4.0
+        R = d / 2.0
+        rho_o = (R * R + nose * nose) / (2.0 * R)          # ogive radius
+        xs = np.linspace(0.0, nose, 2001)
+        y = np.sqrt(rho_o ** 2 - (nose - xs) ** 2) + R - rho_o
+        dy = np.gradient(y, xs)
+        a_nose = float(np.trapezoid(2.0 * math.pi * y * np.sqrt(1.0 + dy ** 2), xs))
+        self.Awb = a_nose + math.pi * d * (length - nose)
+        self.Awf = 2.0 * n_fins * 0.5 * (c_root + c_tip) * span
+        lam = c_tip / c_root
+        self.mac = (2.0 / 3.0) * c_root * (1.0 + lam + lam * lam) / (1.0 + lam)
+        self.fB = length / d
+        self.t = thick
+        self.fin_front = n_fins * thick * span
+        self.cos2 = math.cos(math.radians(sweep_deg)) ** 2
+        self.sin_eps = math.sin(math.atan(1.0 / (2.0 * nose / d)))
+
+    def friction(self, M, rho, T, v):
+        mu = 1.458e-6 * T ** 1.5 / (T + 110.4)             # Sutherland
+        Re = max(rho * v * self.L / mu, 1.0)
+        rel = self.rough / self.L
+        Rcrit = 51.0 * rel ** (-1.039)
+        if Re < 1e4:
+            cf, rough = 1.48e-2, False
+        elif Re < Rcrit:
+            cf, rough = 1.0 / (1.50 * math.log(Re) - 5.6) ** 2, False
+        else:
+            cf, rough = 0.032 * rel ** 0.2, True
+        if M < 1.0:
+            cfc = cf * (1.0 - 0.1 * M * M)
+        else:
+            turb = (1.0 / (1.50 * math.log(max(Re, 1e4)) - 5.6) ** 2) / (1.0 + 0.15 * M * M) ** 0.58
+            cfc = max(cf / (1.0 + 0.18 * M * M), turb) if rough else cf / (1.0 + 0.15 * M * M) ** 0.58
+        return cfc * ((1.0 + 1.0 / (2.0 * self.fB)) * self.Awb + (1.0 + 2.0 * self.t / self.mac) * self.Awf) / self.Aref
+
+    def nose(self, M):
+        se = self.sin_eps
+        c1 = se
+        s1 = (4.0 / 2.4) * (1.0 - 0.5 * c1)
+        f = lambda m: 2.1 * se * se + 0.5 * se / math.sqrt(m * m - 1.0)
+        if M >= 1.3:
+            return f(M)
+        if M >= 1.0:                                        # cubic through values and slopes at 1 and 1.3
+            c2 = f(1.3)
+            s2 = -0.5 * se * 1.3 / (1.3 * 1.3 - 1.0) ** 1.5
+            h = 0.3
+            u = (M - 1.0) / h
+            return ((2 * u ** 3 - 3 * u ** 2 + 1) * c1 + (u ** 3 - 2 * u ** 2 + u) * h * s1
+                    + (-2 * u ** 3 + 3 * u ** 2) * c2 + (u ** 3 - u ** 2) * h * s2)
+        return c1 * M ** (s1 / c1)                          # tangent ogive: zero at M = 0
+
+    @staticmethod
+    def base(M):
+        return 0.12 + 0.13 * M * M if M < 1.0 else 0.25 / M
+
+    def fins(self, M):
+        if M < 0.9:
+            le = (1.0 - M * M) ** (-0.417) - 1.0
+        elif M < 1.0:
+            le = 1.0 - 1.785 * (M - 0.9)
+        else:
+            le = 1.214 - 0.502 / M ** 2 + 0.1095 / M ** 4
+        return (le * self.cos2 + self.base(M)) * self.fin_front / self.Aref
+
+    def parts(self, M, rho, T, v, base_frac=1.0):
+        return dict(friction=self.friction(M, rho, T, v), nose=self.nose(M), fins=self.fins(M), base=self.base(M) * base_frac)
+
+    def __call__(self, M, rho, T, v, base_frac=1.0):
+        return sum(self.parts(M, rho, T, v, base_frac).values())
+
+
 def fly_tilted(m0, mp, d, mdot, isp_vac, Ae, z0, tilt_deg, mode='fixed', rail=10.0, cd_scale=1.0):
     """Planar flight of the liquid vehicle ignited at an angle tilt_deg from the vertical.
 
@@ -341,7 +424,11 @@ def fly(m0, mp, d, mdot, isp_vac, Ae, z_kin=0.0, z_drag=None, z_noz=None, v0=0.0
         D = 0.0
         if drag and v != 0.0:
             Mach = abs(v) / math.sqrt(1.4 * RSTAR / M_AIR * T)
-            D = 0.5 * rho * v * abs(v) * cd_scale * (cd_fn or cd_generic)(Mach) * A
+            if getattr(cd_fn, 'full', False):
+                cdv = cd_fn(Mach, rho, T, abs(v), max(1.0 - Ae / A, 0.0) if burning else 1.0)
+            else:
+                cdv = (cd_fn or cd_generic)(Mach)
+            D = 0.5 * rho * v * abs(v) * cd_scale * cdv * A
         if burning:
             F = Fv - atmosphere(z_noz + h)[1] * Ae
             return [v * se, (F - D) / m - g, -mdot, g, D / m, F / m, 0.5 * rho * v * v, 0.0]
