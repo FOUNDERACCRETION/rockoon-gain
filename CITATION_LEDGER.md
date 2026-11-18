@@ -28,7 +28,7 @@ Every entry must reach "checked by an author against the original" before upload
 | varghese1999, jones2018, iarc | CARRIED | Audit appendix and hazards | Confirm each |
 | inspace, bva, peso, msihc | CARRIED | Regulatory paragraph | Confirm each, or cut the paragraph |
 | bollermann1968 | OPENED (machine-read PDF) | Super Loki Dart masses, thrust, drag tables, computed trajectory (113.4 km), White Sands flights about 125 km | **Check the drag tables and Table 3.1-3.3 against the scan**; the Mach 2.50 entry was illegible and is not used |
-| sarigul2005 | RECORD (snippets only) | That orbital air-launch studies list drag, gravity, steering and atmospheric-pressure losses | **Read the paper**; confirm it does not already give a zero-speed balloon case or a similarity parameter |
+| sarigul2005 | OPENED (full text, author-uploaded copy, read 18 Nov 2026) | Loss terms in the velocity budget; Minotaur 36,200 kg; altitudes to 30,490 m; Mach 0-3; >160 POST runs; nozzle kept at 10:1; very little improvement above 15,240 m. No similarity parameter, no attribution, no balloon mass, orbital only | **Page range**: the text read runs 569-572, but ResearchGate and Google Scholar list 569-575. Confirm on the AIAA page and correct if needed |
 | shapley1953, saltelli2010 | CARRIED (standard references, not opened) | Attribution method; Sobol estimator | Confirm each record. The code uses the Jansen-type estimators described in Saltelli et al. |
 
 okninski2016 additionally supports two statements taken from the research pass, not from my own reading: exit diameter capped at body diameter, and "highest launch altitude best". Confirm both in the full text.
