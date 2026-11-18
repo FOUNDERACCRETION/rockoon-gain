@@ -20,6 +20,7 @@ def thousands(x):
 
 
 M0, MP = 301.27, 151.27
+CDREF = 0.40
 LB, FT, MI = 0.45359237, 0.3048, 1609.344
 
 
@@ -315,6 +316,106 @@ def main():
     v = math.sqrt(rm.GM / (rm.R_EARTH + 400e3))
     put('audEratio', (v * v / 2 + rm.GM * (1 / rm.R_EARTH - 1 / (rm.R_EARTH + 400e3))) / (rm.GM * (1 / rm.R_EARTH - 1 / (rm.R_EARTH + 100e3))), '{:.0f}')
     put('h2oRatio', 103.0 / 17.5, '{:.0f}')
+
+    # ---- validation: Super Loki Dart (NASA CR-61238)
+    F_sl, FTm = 4450 * 4.4482216, 0.3048
+    def loki(z0, el, cds=1.0):
+        return rm.fly2d(28.32, 16.87, 85.47e-4, F_sl, 2.0, rm.cd_superloki, el, z0=z0, m2=6.12, area2=9.84e-4, cd_fn2=rm.cd_dart, cd_scale=cds)
+    a = loki(0.0, 80.0); b = loki(1219.0, 80.0)
+    put('lokiVb', a['v_b'], '{:.0f}'); put('lokiVbRep', 5893 * FTm, '{:.0f}'); put('lokiVbErr', 100 * (a['v_b'] / (5893 * FTm) - 1), '{:+.1f}')
+    put('lokiAp', a['apogee'] / 1e3, '{:.1f}'); put('lokiApErr', 100 * (a['apogee'] / 113.4e3 - 1), '{:+.1f}'); put('lokiTap', a['t_apogee'], '{:.0f}')
+    put('lokiRange', a['range'] / 1e3, '{:.0f}')
+    put('lokiWs', b['apogee'] / 1e3, '{:.0f}'); put('lokiWsErr', 100 * (b['apogee'] / 125e3 - 1), '{:+.0f}')
+    put('lokiImp', 8900 * 4.4482216 / 1e3, '{:.1f}'); put('lokiF', F_sl / 1e3, '{:.1f}')
+    A_l = 85.47e-4
+    put('lokiPiZero', 0.5 * A_l * 101325.0 / (28.32 * rm.G0), '{:.1f}')
+    # ---- similarity study (results/similarity.json, written by similarity.py)
+    S = json.load(open(os.path.join(ROOT, 'results', 'similarity.json')))
+    E = S['ensemble']
+    g = lambda k: np.array([e[k] for e in E])
+    TEX['ensN'] = str(len(E)); RES['ensN'] = len(E)
+    pi0 = g('pi0'); L = np.log
+    put('ensPiLo', pi0.min(), '{:.2f}'); put('ensPiHi', pi0.max(), '{:.1f}')
+    ldf = g('ld_g') / g('dv_g'); Rr = g('balloon') / g('ground')
+    def fit(X, y):
+        X = np.column_stack([np.ones(len(y))] + X); b_, *_ = np.linalg.lstsq(X, y, rcond=None); r = y - X @ b_
+        return 1 - r.var() / y.var(), r.std(), b_, X @ b_
+    one = lambda: [L(pi0), L(pi0) ** 2]
+    two = lambda: one() + [L(g('psi')), g('xi')]
+    full = lambda: two() + [L(g('pc') / 101325.0), g('z0') / 7000.0, L(g('pic'))]
+    rows = []
+    fits = {}
+    for tag, lab, y, scale, unit in (('Ld', 'Ground drag loss / thrust $\\Delta v$ (log)', L(ldf), 100, '\\%'), ('Sd', 'Drag share $S_D$', g('f_drag'), 100, 'pp'),
+                                     ('Sn', 'Nozzle share $S_N$', g('f_noz'), 100, 'pp'), ('Sh', 'Head-start share $S_H$', g('f_head'), 100, 'pp'),
+                                     ('R', 'Apogee ratio $R$ (log)', L(Rr), 100, '\\%')):
+        r1 = fit(one(), y); r2 = fit(two(), y); r3 = fit(full(), y)
+        fits[tag] = (r1, r3)
+        for nm, r in (('One', r1), ('Two', r2), ('Full', r3)):
+            put('fit' + tag + nm, r[0], '{:.2f}'); put('fit' + tag + nm + 'Sd', scale * r[1], '{:.1f}')
+        rows.append('%s & %.2f & %.1f\\,%s & %.2f & %.1f\\,%s & %.2f & %.1f\\,%s \\\\' % (lab, r1[0], scale * r1[1], unit, r2[0], scale * r2[1], unit, r3[0], scale * r3[1], unit))
+    with open(os.path.join(ROOT, 'paper', 'tab_collapse.tex'), 'w') as f:
+        f.write('\n'.join(rows) + '\n')
+    sl = np.polyfit(L(pi0), L(ldf), 1)
+    put('ldSlope', sl[0], '{:.2f}'); put('ldCoef', math.exp(sl[1]), '{:.3f}')
+    from scipy.stats import spearmanr as sp_
+    put('ldRho', sp_(pi0, ldf)[0], '{:.2f}'); put('sdRho', sp_(pi0, g('f_drag'))[0], '{:.2f}'); put('rRho', sp_(pi0, Rr)[0], '{:.2f}')
+    put('ensLdLo', 100 * np.percentile(ldf, 5), '{:.0f}'); put('ensLdHi', 100 * np.percentile(ldf, 95), '{:.0f}')
+    put('ensLdBalMed', 100 * np.median(g('ld_b') / g('dv_b')), '{:.1f}')
+    put('ensDragLargest', 100 * np.mean((g('f_drag') > g('f_noz')) & (g('f_drag') > g('f_head'))), '{:.0f}')
+    put('ensSdLo', 100 * np.percentile(g('f_drag'), 5), '{:.0f}'); put('ensSdHi', 100 * np.percentile(g('f_drag'), 95), '{:.0f}')
+    put('ensRLo', np.percentile(Rr, 5), '{:.1f}'); put('ensRHi', np.percentile(Rr, 95), '{:.0f}')
+    sol = g('eng') == 3
+    put('ensSolidOff', 100 * np.mean((g('f_drag') - fits['Sd'][1][3])[sol]), '{:+.1f}')
+    RES['ens_fit_sd'] = fits['Sd'][1][3].tolist()
+    # optimum float altitude
+    import collections
+    fam = collections.defaultdict(list)
+    for r in S['system']:
+        fam[(r['mat'], r['mfix'], r['target'])].append(r)
+    opt = []
+    for (mat, mfix, tgt), v in sorted(fam.items()):
+        v = sorted(v, key=lambda r: r['z'])
+        if any(r['m0'] is None for r in v):
+            continue
+        z = np.array([r['z'] for r in v]); tot = np.array([r['total'] for r in v])
+        i = int(np.argmin(tot[1:])) + 1
+        if 1 < i < len(z) - 1:
+            c = np.polyfit(z[i - 1:i + 2], tot[i - 1:i + 2], 2); zst = -c[1] / (2 * c[0]); tst = float(np.polyval(c, zst))
+        else:
+            zst, tst = z[i], tot[i]
+        above = [zz for zz, tt in zip(z[1:], tot[1:]) if tt > tot[0]]
+        within = z[1:][tot[1:] <= 1.05 * tot[i]]
+        A = math.pi * v[0]['d'] ** 2 / 4
+        opt.append(dict(mat=mat, mfix=mfix, target=tgt / 1e3, ground=float(tot[0]), zstar=float(zst), total=tst, rocket=v[i]['m0'], V=v[i]['V'],
+                        pi0=CDREF * A * 101325.0 / (v[0]['m0'] * rm.G0), lo=float(within.min()), hi=float(within.max()),
+                        breakeven=float(min(above)) if above else None, curve=[z.tolist(), (tot / tot[0]).tolist()]))
+    RES['optimum'] = opt
+    o100 = [o for o in opt if o['target'] == 100.0]
+    put('zsLo', min(o['zstar'] for o in o100), '{:.0f}'); put('zsHi', max(o['zstar'] for o in o100), '{:.0f}')
+    put('zsAllLo', min(o['zstar'] for o in opt), '{:.0f}'); put('zsAllHi', max(o['zstar'] for o in opt), '{:.0f}')
+    put('zsMassLo', min(o['ground'] for o in o100), '{:.0f}'); TEX['zsMassHi'] = thousands(max(o['ground'] for o in o100)); RES['zsMassHi'] = max(o['ground'] for o in o100)
+    put('zsSaveLo', 100 * (1 - max(o['total'] / o['ground'] for o in o100)), '{:.0f}'); put('zsSaveHi', 100 * (1 - min(o['total'] / o['ground'] for o in o100)), '{:.0f}')
+    put('zsBandLo', max(o['lo'] for o in o100), '{:.1f}'); put('zsBandHi', min(o['hi'] for o in o100), '{:.1f}')
+    zfit = np.polyfit([math.log(o['ground']) for o in o100 if o['mat'] == 'Al6061T6'], [o['zstar'] for o in o100 if o['mat'] == 'Al6061T6'], 1)
+    put('zsSlope', zfit[0] * math.log(10), '{:.1f}')
+    b80 = [o for o in o100 if o['mat'] == 'Al6061T6' and o['mfix'] == 80.0][0]
+    put('zsBase', b80['zstar'], '{:.0f}'); put('zsBaseTot', b80['total'], '{:.0f}'); put('zsBaseGnd', b80['ground'], '{:.0f}'); put('zsBaseRocket', b80['rocket'], '{:.0f}')
+    TEX['zsBaseV'] = thousands(round(b80['V'], -2)); RES['zsBaseV'] = b80['V']
+    be = [o['breakeven'] for o in o100 if o['breakeven']]
+    put('beLo', min(be), '{:.1f}') if be else None; put('beHi', max(be), '{:.1f}') if be else None
+    TEX['beCount'] = str(len(be)); TEX['optCount'] = str(len(o100))
+    rows = []
+    for o in o100:
+        rows.append('%s & %.0f & %s & %.0f & %s & %.0f & %s \\\\' % ('Al' if o['mat'].startswith('Al') else 'steel', o['mfix'], thousands(o['ground']), o['zstar'], thousands(o['total']), o['rocket'], thousands(round(o['V'], -1))))
+    with open(os.path.join(ROOT, 'paper', 'tab_optimum.tex'), 'w') as f:
+        f.write('\n'.join(rows) + '\n')
+    # Sobol
+    RES['sobol'] = S['sobol']
+    sb = {x['z']: x for x in S['sobol']}
+    for z, tag in ((0, 'Zero'), (5, 'Five'), (10, 'Ten'), (20, 'Twenty'), (30, 'Thirty')):
+        put('sobCd' + tag, max(sb[z]['ST'][0], 0.0), '{:.2f}'); put('sobEta' + tag, sb[z]['ST'][1], '{:.2f}'); put('sobDry' + tag, sb[z]['ST'][3], '{:.2f}')
+        put('sobPi' + tag, sb[z]['piz'], '{:.2f}' if sb[z]['piz'] > 0.1 else '{:.3f}')
+    TEX['sobN'] = thousands(1024)
 
     os.makedirs(os.path.join(ROOT, 'results'), exist_ok=True)
     with open(os.path.join(ROOT, 'results', 'results.json'), 'w') as f:

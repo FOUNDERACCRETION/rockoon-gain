@@ -27,6 +27,11 @@ Every entry must reach "checked by an author against the original" before upload
 | asm, astm | CARRIED | Yield strengths 276 MPa and 205 MPa | Confirm values and editions |
 | varghese1999, jones2018, iarc | CARRIED | Audit appendix and hazards | Confirm each |
 | inspace, bva, peso, msihc | CARRIED | Regulatory paragraph | Confirm each, or cut the paragraph |
+| bollermann1968 | OPENED (machine-read PDF) | Super Loki Dart masses, thrust, drag tables, computed trajectory (113.4 km), White Sands flights about 125 km | **Check the drag tables and Table 3.1-3.3 against the scan**; the Mach 2.50 entry was illegible and is not used |
+| sarigul2005 | RECORD (snippets only) | That orbital air-launch studies list drag, gravity, steering and atmospheric-pressure losses | **Read the paper**; confirm it does not already give a zero-speed balloon case or a similarity parameter |
+| shapley1953, saltelli2010 | CARRIED (standard references, not opened) | Attribution method; Sobol estimator | Confirm each record. The code uses the Jansen-type estimators described in Saltelli et al. |
+
+okninski2016 additionally supports two statements taken from the research pass, not from my own reading: exit diameter capped at body diameter, and "highest launch altitude best". Confirm both in the full text.
 
 Removed since the October draft because they could not be verified: Van Allen & Gottlieb 1954 (page range),
 NASA NSS 1740.16 (cancelled standard; hydrogen flammability numbers dropped), McDowell 2018, the USC news

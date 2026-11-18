@@ -16,7 +16,7 @@ residue = [w for w in ('TODO', 'FIXME', 'XXX', 'TBD', 'VERIFY', 'placeholder', '
 comments = [l for l in tex.splitlines() if re.search(r'(?<!\\)%', l)]
 R = json.load(open(os.path.join(ROOT, 'results', 'results.json')))
 stale = os.path.getmtime(os.path.join(ROOT, 'results', 'results.json')) < max(
-    os.path.getmtime(os.path.join(rm.HERE, f)) for f in ('rockoon_model.py', 'run_analysis.py'))
+    os.path.getmtime(os.path.join(rm.HERE, f)) for f in ('rockoon_model.py', 'run_analysis.py', 'similarity.py'))
 ok = True
 for name, items in (('undefined result keys', bad), ('cited but not in bibliography', sorted(cites - bibs)),
                     ('in bibliography but never cited', sorted(bibs - cites)), ('undefined cross-references', sorted(refs - labels)),

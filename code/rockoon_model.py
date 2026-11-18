@@ -160,6 +160,19 @@ def build_tables(path):
     return out
 
 
+def ideal_gas_nozzle(gamma, cstar, pc, n=220, pr_min=2.0e-5):
+    """Nozzle table for a constant-gamma gas (used for the generic solid-motor family)."""
+    pr = np.exp(np.linspace(math.log(0.5), math.log(pr_min), n))
+    g = gamma
+    Me = np.sqrt(2.0 / (g - 1.0) * (pr ** (-(g - 1.0) / g) - 1.0))
+    eps = (1.0 / Me) * ((2.0 / (g + 1.0)) * (1.0 + 0.5 * (g - 1.0) * Me ** 2)) ** ((g + 1.0) / (2.0 * (g - 1.0)))
+    cf0 = np.sqrt(2.0 * g * g / (g - 1.0) * (2.0 / (g + 1.0)) ** ((g + 1.0) / (g - 1.0)) * (1.0 - pr ** ((g - 1.0) / g)))
+    keep = Me > 1.0
+    return dict(pc=pc, cstar=cstar, Tc=float('nan'), pe=(pr * pc)[keep], eps=eps[keep],
+                isp_vac=(cstar * (cf0 + pr * eps) / G0)[keep], isp_opt=(cstar * cf0 / G0)[keep])
+
+
+SOLID = dict(gamma=1.16, cstar=1500.0, pc=6.0e6)
 _TABLE = None
 
 
@@ -175,6 +188,7 @@ def table():
             nz = _TABLE[key]
             for k in ('pe', 'eps', 'isp_vac', 'isp_opt'):
                 nz[k] = np.array(nz[k])
+        _TABLE['solid'] = ideal_gas_nozzle(**SOLID)
     return _TABLE
 
 
@@ -216,6 +230,54 @@ def cd_generic(M):
     if M <= 1.05:
         return CD_SUB + (CD_PEAK - CD_SUB) * (M - 0.8) / 0.25
     return CD_INF + (CD_PEAK - CD_INF) * (1.05 / M) ** CD_EXP
+
+
+_SL_M = [0, 0.50, 0.80, 0.81, 1.40, 1.50, 1.75, 2.00, 2.25, 2.75, 3.00, 3.25, 3.50, 3.75, 4.00, 4.25, 4.50, 4.75, 5.00,
+         5.25, 5.50, 5.75, 6.00, 7.00]
+_SL_C = [0.400, 0.420, 0.430, 0.930, 0.930, 0.880, 0.770, 0.682, 0.620, 0.533, 0.500, 0.470, 0.440, 0.420, 0.397, 0.380,
+         0.360, 0.345, 0.331, 0.320, 0.310, 0.300, 0.290, 0.260]
+_DART_M = [0, 0.90, 1.00, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 3.50, 4.00, 4.50, 5.00, 6.00, 7.00, 8.00]
+_DART_C = [0.350, 0.350, 0.576, 0.576, 0.489, 0.432, 0.393, 0.365, 0.345, 0.329, 0.308, 0.294, 0.284, 0.277, 0.277,
+           0.262, 0.262]
+
+
+def cd_superloki(M):
+    """Booster plus dart, NASA CR-61238 Table 4.1 (reference area 85.47 cm2; the Mach 2.50 entry is not used)."""
+    return float(np.interp(M, _SL_M, _SL_C))
+
+
+def cd_dart(M):
+    """Dart alone, NASA CR-61238 Table 4.1 (reference area 9.84 cm2)."""
+    return float(np.interp(M, _DART_M, _DART_C))
+
+
+def fly2d(m0, mp, area, thrust, tb, cd_fn, elev_deg, z0=0.0, m2=None, area2=None, cd_fn2=None, cd_scale=1.0):
+    """Planar point-mass flight with thrust and drag along the velocity (gravity turn), constant
+    thrust for tb seconds, and an optional change of mass, area and drag curve at burnout."""
+    th = math.radians(elev_deg)
+    mdot = mp / tb
+
+    def rhs(t, y, burning, A, cdf):
+        x, z, vx, vz, m = y
+        v = math.hypot(vx, vz)
+        T, _, rho = atmosphere(z)
+        g = G0 * (R_EARTH / (R_EARTH + z)) ** 2
+        D = 0.5 * rho * v * v * cd_scale * cdf(v / math.sqrt(1.4 * RSTAR / M_AIR * T)) * A
+        a = ((thrust if burning else 0.0) - D) / m
+        return [vx, vz, a * vx / v, a * vz / v - g, -mdot if burning else 0.0]
+
+    y0 = [0.0, z0, math.cos(th), math.sin(th), m0]
+    s1 = solve_ivp(lambda t, y: rhs(t, y, True, area, cd_fn), [0.0, tb], y0, rtol=1e-9, atol=1e-9, dense_output=True)
+    yb = s1.y[:, -1].copy()
+    out = dict(v_b=math.hypot(yb[2], yb[3]), z_b=yb[1], sol=s1.sol)
+    if m2 is not None:
+        yb[4] = m2
+    ev = lambda t, y: y[3]
+    ev.terminal = True
+    ev.direction = -1
+    s2 = solve_ivp(lambda t, y: rhs(t, y, False, area2 or area, cd_fn2 or cd_fn), [tb, tb + 3000.0], yb, rtol=1e-9, atol=1e-9, events=ev)
+    out.update(apogee=s2.y[1, -1], t_apogee=s2.t[-1], range=s2.y[0, -1])
+    return out
 
 
 def fly(m0, mp, d, mdot, isp_vac, Ae, z_kin=0.0, z_drag=None, z_noz=None, v0=0.0,

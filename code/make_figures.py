@@ -182,7 +182,64 @@ def fig_appendix():
     save(fig, 'fig_appendix')
 
 
+def fig_collapse():
+    S = json.load(open(os.path.join(ROOT, 'results', 'similarity.json')))['ensemble']
+    g = lambda k: np.array([e[k] for e in S])
+    fig, ax = plt.subplots(1, 3, figsize=(W2, 2.3)); fig.subplots_adjust(wspace=0.55)
+    eng = g('eng'); names = ['liquid, 1 MPa', 'liquid, 2 MPa', 'liquid, 4 MPa', 'solid, 6 MPa']; cols = [GREEN, BLUE, PURPLE, ORANGE]
+    for i in range(4):
+        m = eng == i
+        ax[0].loglog(g('pi0')[m], (g('ld_g') / g('dv_g'))[m], '.', ms=2.5, color=cols[i], label=names[i])
+    x = np.array([0.3, 5.0]); ax[0].loglog(x, R['ldCoef'] * x ** R['ldSlope'], color='k', lw=0.8)
+    ax[0].set_xticks([0.3, 1, 3]); ax[0].set_xticklabels(['0.3', '1', '3']); ax[0].set_yticks([0.1, 0.2, 0.5]); ax[0].set_yticklabels(['0.1', '0.2', '0.5']); ax[0].minorticks_off()
+    ax[0].set_xlabel('$\\Pi_D(0)$'); ax[0].set_ylabel('Ground drag loss / thrust $\\Delta v$'); ax[0].legend(loc='lower right', fontsize=6, handletextpad=0.1, markerscale=2)
+    sc = ax[1].scatter(g('pi0'), 100 * g('f_drag'), c=g('z0') / 1e3, s=3, cmap='viridis', lw=0)
+    ax[1].set_xscale('log'); ax[1].set_xticks([0.3, 1, 3]); ax[1].set_xticklabels(['0.3', '1', '3']); ax[1].minorticks_off()
+    ax[1].set_xlabel('$\\Pi_D(0)$'); ax[1].set_ylabel('Drag share of gain (%)')
+    cax = ax[1].inset_axes([0.05, 0.9, 0.45, 0.04]); cb = fig.colorbar(sc, cax=cax, orientation='horizontal'); cb.set_ticks([10, 25, 40]); cb.ax.tick_params(labelsize=6); cax.set_title('$z_0$ (km)', fontsize=6.5, pad=1)
+    pred = 100 * np.array(R['ens_fit_sd'])
+    ax[2].plot([15, 80], [15, 80], color=GREY, lw=0.8)
+    for i in range(4):
+        m = eng == i
+        ax[2].plot(pred[m], 100 * g('f_drag')[m], '.', ms=2.5, color=cols[i])
+    ax[2].set_xlabel('Drag share from six-group fit (%)'); ax[2].set_ylabel('Drag share of gain (%)'); ax[2].set_xlim(15, 80); ax[2].set_ylim(15, 80)
+    for a, t in zip(ax, ('(a)', '(b)', '(c)')):
+        a.text(-0.26, 1.04, t, transform=a.transAxes, fontweight='bold', fontsize=9, va='bottom')
+    save(fig, 'fig_collapse')
+
+
+def fig_optimum():
+    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.6)); fig.subplots_adjust(wspace=0.33)
+    opt = [o for o in R['optimum'] if o['target'] == 100.0]
+    al = [o for o in opt if o['mat'] == 'Al6061T6']; ss = [o for o in opt if o['mat'] == 'SS321']
+    cols = plt.cm.viridis(np.linspace(0.05, 0.9, len(al)))
+    for o, c in zip(al, cols):
+        ax[0].plot(o['curve'][0], o['curve'][1], color=c, label='%.0f kg' % o['mfix'])
+    ax[0].axhline(1.0, color=GREY, lw=0.8)
+    ax[0].set_xlabel('Float altitude (km)'); ax[0].set_ylabel('Launched mass / ground-launched mass'); ax[0].set_ylim(0.3, 1.4)
+    ax[0].legend(title='$m_{fix}$ (Al tanks)', title_fontsize=7, fontsize=6.5, ncol=2, loc='upper center', columnspacing=0.8)
+    for fam, col, lab, mk in ((al, BLUE, 'aluminium tanks', 'o'), (ss, ORANGE, 'steel tanks', 's')):
+        x = [o['ground'] for o in fam]; z = [o['zstar'] for o in fam]
+        ax[1].errorbar(x, z, yerr=[[zz - o['lo'] for zz, o in zip(z, fam)], [o['hi'] - zz for zz, o in zip(z, fam)]], fmt=mk, color=col, ms=3.5, lw=0.7, capsize=1.5, label=lab)
+    oth = [o for o in R['optimum'] if o['target'] != 100.0]
+    ax[1].plot([o['ground'] for o in oth], [o['zstar'] for o in oth], '^', color=GREEN, ms=3.5, label='60 and 150 km targets')
+    ax[1].set_xscale('log'); ax[1].set_xlabel('Gross mass of the ground-launched vehicle (kg)'); ax[1].set_ylabel('Mass-optimal float altitude (km)'); ax[1].set_ylim(5, 35)
+    ax[1].legend(loc='upper left', fontsize=6.5)
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_optimum')
+
+
+def fig_sobol():
+    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.4)); fig.subplots_adjust(wspace=0.33)
+    sb = R['sobol']; z = [x['z'] for x in sb]
+    for i, c, lab in ((0, BLUE, 'drag scale factor'), (1, ORANGE, 'efficiency $\\eta$'), (3, GREEN, 'dry mass'), (2, PURPLE, 'thrust-to-weight')):
+        ax[0].plot(z, [max(x['ST'][i], 0) for x in sb], 'o-', color=c, ms=3, label=lab)
+    ax[0].set_xlabel('Ignition altitude (km)'); ax[0].set_ylabel('Total-effect Sobol index'); ax[0].set_ylim(0, 0.85); ax[0].legend(loc='upper right', fontsize=6.5, ncol=2, columnspacing=0.8)
+    ax[1].semilogx([x['piz'] for x in sb], [max(x['ST'][0], 0) for x in sb], 'o-', color=BLUE, ms=3)
+    ax[1].set_xlabel('$\\Pi_D(z_0)$'); ax[1].set_ylabel('Sobol index of the drag scale factor'); ax[1].set_ylim(0, 0.55)
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_sobol')
+
+
 if __name__ == '__main__':
     R_T = json.load(open(os.path.join(rm.HERE, 'thermo_table.json')))
-    fig_inputs(); fig_validation(); fig_trajectory(); fig_decomposition(); fig_scaling(); fig_closure(); fig_montecarlo(); fig_appendix()
+    fig_inputs(); fig_validation(); fig_trajectory(); fig_decomposition(); fig_scaling(); fig_closure(); fig_montecarlo(); fig_appendix(); fig_collapse(); fig_optimum(); fig_sobol()
     print('figures written to', OUT)
