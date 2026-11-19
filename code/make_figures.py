@@ -1,3 +1,4 @@
+import math
 """Draw every figure of the paper from results/results.json and the model."""
 import json, math, os
 import numpy as np
@@ -264,7 +265,52 @@ def fig_sobol():
     panel(ax[0], '(a)'); panel(ax[1], '(b)'); panel(ax[2], '(c)'); save(fig, 'fig_sobol')
 
 
+def fig_rule():
+    F = json.load(open(os.path.join(ROOT, 'results', 'final.json')))
+    ru = F['rule']['families']
+    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.6)); fig.subplots_adjust(wspace=0.35)
+    for mf, c in ((20.0, GREEN), (80.0, BLUE), (320.0, PURPLE)):
+        f = [x for x in ru if x['mat'] == 'Al6061T6' and x['mfix'] == mf][0]
+        z = np.linspace(10, 35, 120)
+        me = [rm.balloon(1.10 * (f['minf'] + f['B'] * math.exp(-x / f['L'])), x * 1e3)[1] for x in z]
+        hr = []
+        for x in z:
+            e = 50.0; zz = x * 1e3
+            hr.append(-rm.atmosphere(zz)[2] / ((rm.atmosphere(zz + e)[2] - rm.atmosphere(zz - e)[2]) / (2 * e)))
+        rhs = [1.5 * h * 1.10 * f['B'] / f['L'] * math.exp(-x / f['L']) / 1e3 for h, x in zip(hr, z)]
+        ax[0].semilogy(z, me, '--', color=c); ax[0].semilogy(z, rhs, '-', color=c, label='$m_{\\mathrm{fix}}$ = %.0f kg' % mf)
+        ax[0].axvline(f['z_model'], color=c, lw=0.6, ls=':')
+    ax[0].set_xlabel('Float altitude (km)'); ax[0].set_ylabel('Mass (kg)'); ax[0].legend(fontsize=6, loc='upper left')
+    ax[0].text(0.97, 0.05, 'dashed: envelope $m_e$\nsolid: $\\frac{3}{2}H_\\rho|dm_s/dz|$', transform=ax[0].transAxes, ha='right', fontsize=6)
+    for mat, c, mk in (('Al6061T6', BLUE, 'o'), ('SS321', ORANGE, 's')):
+        v = [x for x in ru if x['mat'] == mat]
+        ax[1].plot([x['z_model'] for x in v], [x['z_rule'] for x in v], mk, color=c, ms=4, label='aluminium tanks' if mat == 'Al6061T6' else 'steel tanks')
+    ax[1].plot([16, 24], [16, 24], color=GREY, lw=0.8)
+    ax[1].set_xlabel('Optimum of the full model, $z^*$ (km)'); ax[1].set_ylabel('Optimum from the envelope rule (km)'); ax[1].legend(fontsize=6)
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_rule')
+
+
+def fig_mcsave():
+    F = json.load(open(os.path.join(ROOT, 'results', 'final.json')))
+    mc = F['mc']
+    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.6)); fig.subplots_adjust(wspace=0.33)
+    for k, key, scale, yl in ((0, 'save_q', 100, 'Saving in launched mass (%)'), (1, 'z_q', 1, 'Mass-optimal float altitude (km)')):
+        pos = 0
+        ticks, labs = [], []
+        for mat, c in (('Al6061T6', BLUE), ('SS321', ORANGE)):
+            for o in [x for x in mc if x['mat'] == mat]:
+                q = [scale * x for x in o[key]]
+                ax[k].add_patch(plt.Rectangle((pos - 0.3, q[1]), 0.6, q[3] - q[1], color=c, alpha=0.5))
+                ax[k].plot([pos - 0.3, pos + 0.3], [q[2]] * 2, color=c); ax[k].plot([pos, pos], [q[0], q[1]], color=c, lw=0.8); ax[k].plot([pos, pos], [q[3], q[4]], color=c, lw=0.8)
+                ticks.append(pos); labs.append('%.0f' % o['mfix']); pos += 1
+            pos += 1
+        ax[k].set_xticks(ticks); ax[k].set_xticklabels(labs, rotation=90, fontsize=6); ax[k].set_xlim(-1, pos - 1)
+        ax[k].set_xlabel('$m_{\\mathrm{fix}}$ (kg): aluminium (blue), steel (orange)'); ax[k].set_ylabel(yl)
+    ax[0].axhline(0, color=GREY, lw=0.8)
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_mcsave')
+
+
 if __name__ == '__main__':
     R_T = json.load(open(os.path.join(rm.HERE, 'thermo_table.json')))
-    fig_inputs(); fig_validation(); fig_trajectory(); fig_decomposition(); fig_scaling(); fig_closure(); fig_montecarlo(); fig_appendix(); fig_lapse(); fig_collapse(); fig_optimum(); fig_sobol()
+    fig_inputs(); fig_validation(); fig_trajectory(); fig_decomposition(); fig_scaling(); fig_closure(); fig_montecarlo(); fig_appendix(); fig_lapse(); fig_collapse(); fig_optimum(); fig_sobol(); fig_rule(); fig_mcsave()
     print('figures written to', OUT)

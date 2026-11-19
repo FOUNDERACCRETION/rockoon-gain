@@ -21,7 +21,7 @@
 \newcommand{\ms}{\,\mathrm{m\,s^{-1}}}
 \newcommand{\kgm}{\,\mathrm{kg\,m^{-3}}}
 
-\title{\textbf{The mass-optimal float altitude for balloon-launched sounding rockets, and where the rockoon advantage comes from}}
+\title{\textbf{The mass-optimal float altitude for balloon-launched sounding rockets is robust; the mass saving is not}}
 \author{Aadi Ramnani \and Karthikeya Aduru \and Bala Mysura Sreethan Reddy\\[4pt]
 \small CHIREC International School, Hyderabad, Telangana, India}
 \date{November 2026}
@@ -30,7 +30,7 @@
 \maketitle
 
 \begin{abstract}
-\noindent A rockoon is a sounding rocket carried into the stratosphere by a balloon before ignition. We ask which float altitude minimises the mass that must leave the ground, and where the apogee gain comes from. With a first-order model checked against Deacon and Super Loki flights and nine Deacon rockoon flights of 1952--53, and with the balloon, gondola and gas counted, the float altitude that minimises the launched mass for a 100\,km apogee is \R{zsLo}--\R{zsHi}\,km over a fifty-fold range of vehicle mass, and it stays near 16--24\,km when nozzle mass, attitude-control hardware, a load-scaled envelope and a ground vehicle designed for ground launch are included. Whether the rockoon saves mass at all is less robust: \R{fbSaveLo}--\R{fbSaveHi}\% with both vehicles designed for their own launch, but nothing for aluminium-tanked vehicles once every penalty is counted. A Shapley attribution over eight counterfactual trajectories splits the apogee gain of a 301\,kg UDMH/N$_2$O$_4$ vehicle into drag (\R{decFDrag}\%), nozzle (\R{decFNozzle}\%) and head start (\R{decFHead}\%). The ballistic drag parameter $\Pi_D=C_DA\,p(z_0)/(m_0g_0)$ explains \R{fitLdOne} of the variance of the ground-launch drag loss over \R{ensN} vehicles, and the drag coefficient stops mattering for four test vehicles once $\Pi_D(z_0)$ falls to about 0.2. The model matches ground-launched solid rockets to a few per cent and rockoon apogees to about 10\% with one fitted mass per group; the liquid-engine model is not validated against flight.
+\noindent A rockoon is a sounding rocket carried into the stratosphere by a balloon before ignition. We ask which float altitude minimises the mass that must leave the ground, whether the balloon saves mass at all, and where the apogee gain comes from. With a first-order model checked against Deacon and Super Loki flights and nine Deacon rockoon flights of 1952--53, and with the balloon, gondola and gas counted, the float altitude that minimises the launched mass for a 100\,km apogee is \R{zsLo}--\R{zsHi}\,km over a fifty-fold range of vehicle mass. An exact condition explains why it is robust: at the optimum the envelope weighs $\tfrac32H_\rho$ times the suspended mass saved per unit of altitude, so the optimum depends on every input only logarithmically, with a length scale of about 5\,km, and not at all on the ground-launched comparator. The saving is not robust. Against ground-launched vehicles designed for ground launch, including two-stage ones, and with the hardware that only a rockoon needs, it is \R{fcSsLo}--\R{fcSsHi}\% for pressure-fed rockets with steel tanks but \R{fcAlLo} to \R{fcAlHi}\% with aluminium tanks and \R{fcSoLo} to \R{fcSoHi}\% with solid motors. A Shapley attribution splits the apogee gain of a 301\,kg UDMH/N$_2$O$_4$ vehicle into drag (\R{decFDrag}\%), nozzle (\R{decFNozzle}\%) and head start (\R{decFHead}\%). The ballistic drag parameter $\Pi_D=C_DA\,p(z_0)/(m_0g_0)$ explains \R{fitLdOne} of the variance of the ground-launch drag loss over \R{ensN} vehicles, and the drag coefficient stops mattering once $\Pi_D(z_0)$ falls to about 0.2. The liquid-engine model is not validated against flight.
 \end{abstract}
 
 \section{Introduction}
@@ -63,7 +63,7 @@ Shoyama \emph{et al.} \cite{shoyama2021,shoyama2026} & Suspended launcher with a
 \end{tabular}
 \end{table}
 
-This paper finds the float altitude that minimises the launched mass, attributes the rockoon advantage to its causes, and asks whether the advantage is governed by a small number of dimensionless groups. The candidate is the drag group
+This paper finds the float altitude that minimises the launched mass, explains why its location is insensitive to the assumptions, asks whether a rockoon saves mass at all, attributes the apogee gain to its causes, and asks whether the advantage is governed by a small number of dimensionless groups. The candidate is the drag group
 \begin{equation}
 \Pi_D(z_0)=\frac{C_D\,A\,p(z_0)}{m_0\,g_0},
 \label{eq:pid}
@@ -78,12 +78,13 @@ H1 turns out to hold for the drag loss but not for the shares, H2 is wrong in it
 \begin{enumerate}
 \item For a pressure-fed storable-propellant sounding rocket, how much of the apogee gain from balloon launch comes from removing drag, how much from the nozzle, and how much from the altitude head start?
 \item Which dimensionless groups determine these shares and the apogee ratio across vehicle sizes, float altitudes and engine types?
-\item Which float altitude minimises the total launched mass for a fixed target apogee, and how much of the apogee uncertainty of a ground launch does the balloon remove?
+\item Which float altitude minimises the total launched mass for a fixed target apogee, why, and does the balloon save mass at all once the ground-launched rocket is designed for ground launch and the hardware that only a rockoon needs is counted?
+\item How much of the apogee uncertainty of a ground launch does the balloon remove?
 \end{enumerate}
 
 The baseline vehicle (301\,kg gross, 151\,kg of propellant, ignition near 30\,km) comes from an unbuilt proposal by the authors; an audit of that proposal is given in a supplementary file. The analysis is first-order and is not a design, and the propellants are unsuitable for amateur use (Appendix~\ref{app:hazards}).
 
-Section~\ref{sec:model} describes the model and Sec.~\ref{sec:validation} its validation. Section~\ref{sec:baseline} gives the results for the baseline vehicle and the attribution of its gain. Section~\ref{sec:general} tests the similarity hypothesis over many vehicles and finds the float altitude of minimum launched mass. Section~\ref{sec:robustsec} examines how the conclusions depend on the assumptions. All numbers, tables and figures are produced by the Python scripts listed under ``Code and data availability''.
+Section~\ref{sec:model} describes the model and Sec.~\ref{sec:validation} its validation. Section~\ref{sec:baseline} gives the results for the baseline vehicle and the attribution of its gain. Section~\ref{sec:general} finds the float altitude of minimum launched mass, derives it analytically, tests whether the rockoon saves mass against several ground-launched comparators, and tests the similarity hypothesis over many vehicles. Section~\ref{sec:robustsec} examines how the conclusions depend on the assumptions. All numbers, tables and figures are produced by the Python scripts listed under ``Code and data availability''.
 
 \section{Model}
 \label{sec:model}
@@ -401,6 +402,118 @@ altitude (km) & (kg, Al) & Al tanks & steel tanks & volume (m$^3$) & envelope (k
 \end{tabular}
 \end{table}
 
+\subsection{The float altitude that minimises launched mass}
+\label{sec:optimum}
+
+Section~\ref{sec:closure} compared rockets. What has to be lifted off the ground, however, is the rocket together with its gondola, envelope and gas. For each of fourteen vehicle families (aluminium or steel tanks, $m_{\mathrm{fix}}$ from 10 to 640\,kg) we closed the vehicle for a 100\,km apogee at float altitudes from 0 to 40\,km and added a gondola of 10\% of the rocket mass, the envelope, and the hydrogen with 10\% free lift.
+
+The total launched mass has a minimum (Fig.~\ref{fig:optimum}a, Table~\ref{tab:optimum}). It lies between \R{zsLo} and \R{zsHi}\,km for every family, although the ground-launched mass of these families spans \R{zsMassLo} to \R{zsMassHi}\,kg. At the optimum the launched mass is \R{zsSaveLo}--\R{zsSaveHi}\% below that of a ground-launched rocket of the same design; Sec.~\ref{sec:saving} shows that this saving, unlike the location of the optimum, does not survive a fair comparison. The minimum is flat: a float altitude between \R{zsBandLo} and \R{zsBandHi}\,km is within 5\% of the optimum for all fourteen families. For aluminium vehicles with $m_{\mathrm{fix}}$ up to 80\,kg the balloon system becomes heavier than the ground-launched rocket above 32--35\,km; for larger vehicles and for steel tanks the crossing lies at 37.5\,km or beyond. Targets of 60 and 150\,km give optima in the same range (Fig.~\ref{fig:optimum}b).
+
+For the vehicle of Sec.~\ref{sec:closure} ($m_{\mathrm{fix}}=80$\,kg, aluminium) the interpolated optimum is at \R{zsBase}\,km. At the nearest computed altitude, \R{zsBaseGrid}\,km, a \R{zsBaseRocket}\,kg rocket and a \R{zsBaseV}\,m$^3$ balloon make a launched mass of \R{zsBaseTotGrid}\,kg, against \R{zsBaseGnd}\,kg from the ground.
+
+The result is not sensitive to the balloon assumptions. For the same vehicle, envelope areal densities of 20 and 40\,$\mathrm{g\,m^{-2}}$ move the optimum to \R{zsSigLo} and \R{zsSigHi}\,km, and gondola fractions of 5\% and 20\% to \R{zsGonLo} and \R{zsGonHi}\,km, with savings of \R{zsGonLoSave}\% and \R{zsGonHiSave}\% (envelope densities of 20 and 40\,$\mathrm{g\,m^{-2}}$ give \R{zsSigLoSave}\% and \R{zsSigHiSave}\%). Over all twelve such variations for $m_{\mathrm{fix}}=20$, 80 and 320\,kg the optimum stays between \R{zsVarLo} and \R{zsVarHi}\,km.
+
+The optimum rises slowly with size, by about \R{zsSlope}\,km per decade of mass for the aluminium family. This is the opposite of what H2 predicts. Larger vehicles have a smaller $\Pi_D(0)$ and so less drag to escape, which by itself would lower the optimum. But the envelope mass grows as $V^{2/3}$ while the lift grows as $V$, so a large balloon is relatively cheaper, and that effect wins. Because this argument rests on the balloon model, we repeated the optimisation with an envelope mass of $\sigma A+k\,m_s$, where the second term stands for load tapes and film that are sized by the suspended load $m_s$ rather than by the area. For $k=0.05$, 0.10 and 0.20 the optimum stays at \R{zsKlALo}--\R{zsKlAHi}, \R{zsKlBLo}--\R{zsKlBHi} and \R{zsKlCLo}--\R{zsKlCHi}\,km and the slope at \R{zsKlASlope}, \R{zsKlBSlope} and \R{zsKlCSlope}\,km per decade, while the smallest saving falls from \R{zsSaveLo}\% to \R{zsKlCSaveLo}\%. A term proportional to the load raises the launched mass at every altitude by nearly the same factor, so it lowers the saving but not the location of the optimum. We have no measured value of $k$ for zero-pressure balloons of this size, so these values are a sensitivity range, not an estimate.
+
+The propellant must also survive the ascent. Nitrogen tetroxide freezes at about $-11\,^\circ$C, and the tropopause is near $-56\,^\circ$C. We sized a foam jacket (conductivity 0.03\,W\,m$^{-1}$\,K$^{-1}$, density 35$\kgm$) around two spherical tanks so that propellant loaded at 20\,$^\circ$C cools by no more than 25\,K during an ascent at 5\,m\,s$^{-1}$ and half an hour at float, taking the outside of the foam at the local air temperature and the propellant at its initial temperature, which overstates the heat loss. The required thickness is at most \R{insThickReq}\,mm; with a practical minimum of 25\,mm the jacket weighs \R{insBase}\,kg for the baseline vehicle, \R{insFracLo}--\R{insFracHi}\% of the rocket mass across the families. Carried by the gondola and released at ignition, it moves the optimum by less than \R{zsThShift}\,km. Radiative loss to a cold sky is not included and would need a test.
+
+The first part of H2 holds and the second does not: the optimum is set mainly by the atmosphere and the envelope, not by $\Pi_D$. Okninski \emph{et al.} \cite{okninski2016} found the highest launch altitude best without counting the mass of the balloon, and they also compared costs. Our objective, the launched mass with the balloon included, is a different one, so the two results answer different questions rather than contradicting each other; a cost weighting is tested in Sec.~\ref{sec:saving}. The smallest families need balloons of a few hundred cubic metres, a size that could be flown on latex balloons or clusters of them, as Okninski \emph{et al.} proposed; our zero-pressure envelope model does not describe those, and the results for the two smallest families are the least reliable. The optimum found here is close to the altitude of about 15\,km above which Sarigul-Klijn \emph{et al.} \cite{sarigul2005} saw little further velocity gain for an orbital vehicle with a fixed nozzle, although their result did not include the mass of a carrier.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_optimum.pdf}
+\caption{(a) Total launched mass (rocket, gondola, envelope and hydrogen) for a 100\,km apogee, divided by the mass of the ground-launched rocket, against float altitude, for aluminium tanks. (b) Float altitude of minimum launched mass against the mass of the ground-launched vehicle. Bars show the range within 5\% of the minimum.}
+\label{fig:optimum}
+\end{figure}
+
+\begin{table}[!htb]
+\centering
+\caption{Mass-optimal float altitude for a 100\,km apogee: ground-launched gross mass, interpolated optimum altitude $z^{*}$, and the launched mass, rocket mass and balloon volume at the nearest computed altitude $z_g$.}
+\label{tab:optimum}
+\small
+\begin{tabular}{cccccccc}
+\toprule
+Tanks & $m_{\mathrm{fix}}$ & Ground-launched & $z^{*}$ & $z_g$ & Launched mass & Rocket & Balloon \\
+ & (kg) & mass (kg) & (km) & (km) & (kg) & (kg) & (m$^3$) \\
+\midrule
+\tabin{tab_optimum.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Why the location of the optimum is robust}
+\label{sec:rule}
+
+The location of the optimum and the size of the saving respond so differently to the assumptions that the reason is worth making explicit. The launched mass is $(1+1.1\gamma)(m_s+m_e)$, where $\gamma=M_g/(M_a-M_g)$ and $m_s$ is the suspended mass (rocket and gondola), so it is smallest where $m_s+m_e$ is. With the envelope $m_e=\sigma(36\pi)^{1/3}V^{2/3}$ and the buoyancy balance $V\Delta\rho=m_s+m_e$, where the net lift per unit volume $\Delta\rho$ is proportional to the air density, the condition $d(m_s+m_e)/dz=0$ makes $d\ln V/dz$ equal to $1/H_\rho$, the inverse of the local density scale height $H_\rho=-\rho/(d\rho/dz)$. The envelope then grows by $\tfrac23 m_e/H_\rho$ per unit height, and at the optimum this must equal the suspended mass saved per unit height:
+\begin{equation}
+m_e(z^*)=\tfrac32\,H_\rho\left|\frac{dm_s}{dz}\right|_{z^*}.
+\label{eq:rule}
+\end{equation}
+At the mass-optimal float altitude the envelope weighs as much as the suspended mass that the last $\tfrac32H_\rho\approx\R{ruleNineFive}$\,km of altitude saved. Equation~(\ref{eq:rule}) is exact for this envelope law. It uses nothing about the rocket except the slope of its closed mass against float altitude, and nothing about the ground-launched comparator.
+
+To see what sets $z^*$, we fitted the closed rocket mass by $m_r(z)=m_\infty+B\,e^{-z/L}$, which describes every family between 10 and 35\,km to within \R{ruleFitErr}\% with $L=\R{ruleLLo}$--\R{ruleLHi}\,km, and the net lift by $\Delta\rho_0e^{-z/H_\ell}$ with $H_\ell=\R{ruleHLift}$\,km between 15 and 25\,km (close to $H_\rho$ there, and not to be confused with the 7\,km scale height of Sec.~\ref{sec:groups}). The envelope then grows as $e^{2z/3H_\ell}$ while the saving per kilometre falls as $e^{-z/L}$, and Eq.~(\ref{eq:rule}) gives
+\begin{equation}
+z^*\approx L_{\mathrm{eff}}\ln\!\left[\frac{3H_\ell\,(1+g)\,B}{2L\,\sigma(36\pi)^{1/3}\,[(1+g)\,m_r/\Delta\rho_0]^{2/3}}\right],\qquad L_{\mathrm{eff}}=\left(\frac1L+\frac{2}{3H_\ell}\right)^{-1},
+\label{eq:zstar}
+\end{equation}
+where $g$ is the gondola fraction, $m_r$ is evaluated near $z^*$, and the buoyancy of the envelope itself is neglected. $L_{\mathrm{eff}}$ is \R{ruleLeffLo}--\R{ruleLeffHi}\,km for the fourteen families. Solving Eq.~(\ref{eq:rule}) with the fitted rocket curves reproduces the optimum of every family to within \R{ruleErrMax}\,km, and Eq.~(\ref{eq:zstar}) to within \R{ruleFormErrMax}\,km (Fig.~\ref{fig:rule}, Table~\ref{tab:rule}). Three consequences follow.
+
+First, every balloon and vehicle parameter enters only through a logarithm multiplied by about 5\,km. Doubling the envelope areal density should lower the optimum by $L_{\mathrm{eff}}\ln2=\R{ruleSigPred}$\,km for the baseline family; the full model gives \R{ruleSigModel}\,km. Raising the gondola from 5\% to 20\% of the rocket mass should raise it by $\tfrac13L_{\mathrm{eff}}\ln(1.20/1.05)=\R{ruleGonPred}$\,km; the full model gives \R{ruleGonModel}\,km. The rise with vehicle size, \R{ruleSlope}\,km per decade of mass from the rule, matches the \R{zsSlope}\,km of the full model.
+
+Second, the ground-launched rocket appears in neither equation. A better ground comparator cannot move the optimum; it can only change the saving.
+
+Third, the saving depends on the same parameters linearly. At the optimum the launched mass is $(1+1.1\gamma)[(1+g)\,m_r(z^*)+m_e(z^*)]$; both terms scale directly with the gondola fraction, the envelope density and the rocket's dry structure, while the ground-launched mass is set by the propellant needed to fight drag from sea level. A change of 20\% in any of these inputs moves the optimum by less than a kilometre and the saving by many percentage points. Section~\ref{sec:saving} finds exactly this.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_rule.pdf}
+\caption{The envelope rule. (a) For three aluminium-tank families, the envelope mass (dashed) and $\tfrac32H_\rho$ times the suspended mass saved per kilometre of float altitude (solid), from the fitted rocket curves; they cross close to the optimum of the full model (dotted lines). (b) Optimum from Eq.~(\ref{eq:rule}) against the optimum of the full model for the fourteen families.}
+\label{fig:rule}
+\end{figure}
+
+\subsection{Whether a rockoon saves mass}
+\label{sec:saving}
+
+The saving of Sec.~\ref{sec:optimum} is measured against a ground-launched vehicle with the same thrust-to-weight ratio, nozzle rule and proportions as the balloon-launched one, and it ignores hardware that only a rockoon needs. We remove both simplifications here.
+
+\emph{Comparators designed for their own launch.} Each ground-launched family was closed again for every combination of fineness 8--25, thrust-to-weight ratio 1.5--6 and ground exit pressure down to 0.4 of ambient, and each balloon-launched family at every float altitude for fineness 8--15 and a thrust-to-weight ratio of 5 or 6. The balloon-launched vehicles nearly all take 6, the highest we allow, so a higher thrust would favour the balloon slightly more. The best ground vehicles take the slimmest body allowed, a fineness of \R{fgFinHi}, a thrust-to-weight ratio of \R{fgTwLo}--\R{fgTwHi} and an exit pressure of \R{fgSepLo}--\R{fgSepHi} of ambient, and are \R{fgRedLo}--\R{fgRedHi}\% lighter than the same-design vehicles. Our drag coefficient does not grow with fineness, so the model rewards slenderness; we stop at 25 because longer bodies need structure and fin area that the model does not count. Without any rockoon-only hardware the optimum is then \R{fpZLo}--\R{fpZHi}\,km and the saving \R{fpSaveLo}--\R{fpSaveHi}\%.
+
+\emph{Hardware that only a rockoon needs.} Its divergent nozzle section is larger: at 30\,km the baseline nozzle, a $15^{\circ}$ cone filling the 0.40\,m base, is \R{skBaseL}\,m long and weighs about \R{skBaseM}\,kg at an assumed 10\,kg\,m$^{-2}$ of wall, against \R{skGndL}\,m and \R{skGndM}\,kg on the ground; we add the divergent-section mass to every vehicle, ground-launched ones included, and close it again. A rocket hanging under a balloon also needs a launcher and attitude control or spin-up, since fins do nothing at near-zero dynamic pressure, which we represent by a heavier gondola, and the envelope may carry load tapes sized by the load ($k$ of Sec.~\ref{sec:optimum}). In a central case (a 10\,kg\,m$^{-2}$ wall, a gondola of 20\% of the rocket mass and $k=0.1$) the optimum is \R{fcZLo}--\R{fcZHi}\,km.
+
+\emph{Two-stage and solid-motor comparators.} A sounding rocket that reaches 100\,km from the ground is usually staged or solid. We closed two-stage pressure-fed vehicles with the same engine model, both stages on one body diameter, in which the booster carries a fixed mass of $0.5\,m_{\mathrm{fix}}$ for its engine, valves and structure, the second-stage nozzle is chosen for the staging altitude and carries its divergent-section mass, and the split of propellant, the two thrust-to-weight ratios and the fineness are searched. They are \R{twoSsLo}--\R{twoSsHi} times the mass of the best single-stage vehicle for steel tanks (lighter in \R{twoSsN} of 7 families) and \R{twoAlLo}--\R{twoAlHi} times for aluminium tanks (lighter in \R{twoAlN} of 7): staging pays when it drops heavy tanks early, and not when the booster's own engine and valves cost more than it saves. For solid motors we used the generic motor of Sec.~\ref{sec:model} with 0.15\,kg of case, liner and nozzle per kilogram of propellant, a non-propulsive mass $m_{\mathrm{fix}}$, and a booster fixed mass of $0.25\,m_{\mathrm{fix}}$; two-stage solid vehicles are \R{twoSoLo}--\R{twoSoHi} times the best single stage.
+
+Against the lighter of the two ground options, the rockoon with the central penalties saves \R{fcSsLo}--\R{fcSsHi}\% for steel tanks, \R{fcAlLo} to \R{fcAlHi}\% for aluminium tanks, and \R{fcSoLo} to \R{fcSoHi}\% with solid motors, whose optimum is \R{fcSoZLo}--\R{fcSoZHi}\,km (Table~\ref{tab:compare}).
+
+\emph{Cost.} Pricing the balloon system (envelope, gas and gondola) at $r$ times the rocket per kilogram, with the vehicles designed for their own launch and the central penalties, gives cost-optimal float altitudes of \R{fcostALo}--\R{fcostAHi}, \R{fcostBLo}--\R{fcostBHi}, \R{fcostCLo}--\R{fcostCHi} and \R{fcostDLo}--\R{fcostDHi}\,km for $r=0.3$, 1, 3 and 10, and the rockoon is the dearer option in \R{fcostAN}, \R{fcostBN}, \R{fcostCN} and \R{fcostDN} of the \R{fcostTot} families. A balloon system that is expensive per kilogram pulls the optimum down, as Eq.~(\ref{eq:zstar}) predicts. We have no reliable prices for either, so $r$ is a free parameter.
+
+\emph{The saving as a probability.} The penalties are uncertain, so instead of a central case we drew 4\,000 samples per pressure-fed family of the efficiency (0.85--0.95), the drag scale factor (0.8--1.2), the nozzle wall (5--20\,kg\,m$^{-2}$), the gondola fraction (10--30\%), the envelope areal density (20--40\,g\,m$^{-2}$) and the load term $k$ (0--0.2). The rocket masses were interpolated from closures on a grid of efficiency, drag and wall, and each sample was compared with the single-stage ground vehicle designed for ground launch at the same efficiency and drag. Every one of the samples for the steel-tank families launches less mass than the ground-launched vehicle; for the aluminium-tank families the probability of a saving is \R{mcPAlLo}--\R{mcPAlHi}\%, with median savings of \R{mcMedSsLo}--\R{mcMedSsHi}\% and \R{mcMedAlLo} to \R{mcMedAlHi}\% (Fig.~\ref{fig:mcsave}). For the vehicle of Sec.~\ref{sec:closure} the probability is \R{mcBaseP}\% and the 5th--95th percentile range of the saving is \R{mcBaseQlo} to \R{mcBaseQhi}\%. Over the same samples the optimum stays between \R{mcZLo} and \R{mcZHi}\,km for every family, and its 5th--95th percentile range is at most \R{mcZWidth}\,km wide; that of the saving is up to \R{mcSaveWidth} percentage points wide and, for the larger aluminium-tank families, straddles zero.
+
+The location of the optimum is therefore a firm result and the saving is not. Whether a rockoon saves mass is decided by how heavy the rocket's own dry structure is. The steel-tank families stand for vehicles with heavy dry structure, such as builds that cannot make light pressure vessels; for them the saving is large and almost certain. A designer free to choose would use light tanks or a solid motor, and for those the saving is small for the smallest vehicles and negative for the largest.
+
+\begin{table}[!htb]
+\centering
+\caption{Lift-off mass (kg) of vehicles that reach 100\,km: ground-launched with the balloon vehicle's design (``same design''), and designed for ground launch with one or two stages; and the rockoon at its optimum with the central penalties (10\,kg\,m$^{-2}$ nozzle wall, 20\% gondola, $k=0.1$). The saving is against the lighter ground-launched option; $P$ is the probability of a saving in the Monte Carlo, against the single-stage option.}
+\label{tab:compare}
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Tanks & $m_{\mathrm{fix}}$ & \multicolumn{3}{c}{Ground launch} & \multicolumn{2}{c}{Rockoon} & Saving & $P$ \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-7}
+ & (kg) & same design & one stage & two stages & launched & $z^*$ (km) & (\%) & (\%) \\
+\midrule
+\tabin{tab_compare.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_mcsave.pdf}
+\caption{Monte Carlo over the rockoon-only penalties, efficiency and drag (4\,000 samples per family; boxes span the quartiles, whiskers the 5th--95th percentiles, lines the median). (a) Saving in launched mass against a single-stage ground-launched vehicle designed for ground launch. (b) Mass-optimal float altitude.}
+\label{fig:mcsave}
+\end{figure}
+
+\FloatBarrier
 \subsection{Test of the similarity hypothesis}
 \label{sec:collapse}
 
@@ -436,51 +549,6 @@ H1 is therefore supported for the drag loss and rejected for the shares. The rea
 Quantity & $R^2$ & resid. & $R^2$ & resid. & $R^2$ & resid. \\
 \midrule
 \tabin{tab_collapse.tex}
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{The float altitude that minimises launched mass}
-\label{sec:optimum}
-
-Section~\ref{sec:closure} compared rockets. What has to be lifted off the ground, however, is the rocket together with its gondola, envelope and gas. For each of fourteen vehicle families (aluminium or steel tanks, $m_{\mathrm{fix}}$ from 10 to 640\,kg) we closed the vehicle for a 100\,km apogee at float altitudes from 0 to 40\,km and added a gondola of 10\% of the rocket mass, the envelope, and the hydrogen with 10\% free lift.
-
-The total launched mass has a minimum (Fig.~\ref{fig:optimum}a, Table~\ref{tab:optimum}). It lies between \R{zsLo} and \R{zsHi}\,km for every family, although the ground-launched mass of these families spans \R{zsMassLo} to \R{zsMassHi}\,kg. At the optimum the launched mass is \R{zsSaveLo}--\R{zsSaveHi}\% below that of the ground-launched rocket; the saving is largest for small vehicles and for heavy tanks. The minimum is flat: a float altitude between \R{zsBandLo} and \R{zsBandHi}\,km is within 5\% of the optimum for all fourteen families. For aluminium vehicles with $m_{\mathrm{fix}}$ up to 80\,kg the balloon system becomes heavier than the ground-launched rocket above 32--35\,km; for larger vehicles and for steel tanks the crossing lies at 37.5\,km or beyond. Targets of 60 and 150\,km give optima in the same range (Fig.~\ref{fig:optimum}b).
-
-For the vehicle of Sec.~\ref{sec:closure} ($m_{\mathrm{fix}}=80$\,kg, aluminium) the interpolated optimum is at \R{zsBase}\,km. At the nearest computed altitude, \R{zsBaseGrid}\,km, a \R{zsBaseRocket}\,kg rocket and a \R{zsBaseV}\,m$^3$ balloon make a launched mass of \R{zsBaseTotGrid}\,kg, against \R{zsBaseGnd}\,kg from the ground.
-
-The result is not sensitive to the balloon assumptions. For the same vehicle, envelope areal densities of 20 and 40\,$\mathrm{g\,m^{-2}}$ move the optimum to \R{zsSigLo} and \R{zsSigHi}\,km, and gondola fractions of 5\% and 20\% to \R{zsGonLo} and \R{zsGonHi}\,km, with savings of \R{zsGonLoSave}\% and \R{zsGonHiSave}\% (envelope densities of 20 and 40\,$\mathrm{g\,m^{-2}}$ give \R{zsSigLoSave}\% and \R{zsSigHiSave}\%). Over all twelve such variations for $m_{\mathrm{fix}}=20$, 80 and 320\,kg the optimum stays between \R{zsVarLo} and \R{zsVarHi}\,km.
-
-The optimum rises slowly with size, by about \R{zsSlope}\,km per decade of mass for the aluminium family. This is the opposite of what H2 predicts. Larger vehicles have a smaller $\Pi_D(0)$ and so less drag to escape, which by itself would lower the optimum. But the envelope mass grows as $V^{2/3}$ while the lift grows as $V$, so a large balloon is relatively cheaper, and that effect wins. Because this argument rests on the balloon model, we repeated the optimisation with an envelope mass of $\sigma A+k\,m_s$, where the second term stands for load tapes and film that are sized by the suspended load $m_s$ rather than by the area. For $k=0.05$, 0.10 and 0.20 the optimum stays at \R{zsKlALo}--\R{zsKlAHi}, \R{zsKlBLo}--\R{zsKlBHi} and \R{zsKlCLo}--\R{zsKlCHi}\,km and the slope at \R{zsKlASlope}, \R{zsKlBSlope} and \R{zsKlCSlope}\,km per decade, while the smallest saving falls from \R{zsSaveLo}\% to \R{zsKlCSaveLo}\%. A term proportional to the load raises the launched mass at every altitude by nearly the same factor, so it lowers the saving but not the location of the optimum. We have no measured value of $k$ for zero-pressure balloons of this size, so these values are a sensitivity range, not an estimate.
-
-The saving above is measured against a ground-launched vehicle with the same thrust-to-weight ratio, nozzle rule and proportions as the balloon-launched one. Section~\ref{sec:robust} shows that this flatters the balloon. We therefore closed each ground-launched family again with its body, thrust and nozzle chosen for ground launch (fineness 10--20, thrust-to-weight ratio 2--6, exit pressure down to 0.7 of ambient). This lowers the ground-launched mass by \R{fairGndRedLo}--\R{fairGndRedHi}\%; the best ground vehicles are the most slender we tried, so a still more slender body would lower it further. Redesigning the balloon-launched vehicles too (fineness 10--15, thrust-to-weight ratio 4--6) helps them much less, because they fly above most of the drag. With both vehicles designed for their own launch the optimum is at \R{fbLo}--\R{fbHi}\,km and the saving is \R{fbSaveLo}--\R{fbSaveHi}\%, against \R{zsSaveLo}--\R{zsSaveHi}\% before. We have not considered a two-stage or solid ground-launched vehicle, which is how 100\,km is usually reached and would lower the reference further.
-
-A rockoon also needs hardware that a ground launch does not. Its divergent nozzle section is larger: at 30\,km the baseline nozzle, a $15^{\circ}$ cone filling the 0.40\,m base, is \R{skBaseL}\,m long and weighs about \R{skBaseM}\,kg at an assumed 10\,kg\,m$^{-2}$ of wall, against \R{skGndL}\,m and \R{skGndM}\,kg on the ground. Adding this mass to both vehicles and closing them again leaves the optimum at \R{hwSkLo}--\R{hwSkHi}\,km with a saving of \R{hwSkSaveLo}--\R{hwSkSaveHi}\% (\R{hwSkHiSaveLo}--\R{hwSkHiSaveHi}\% at 20\,kg\,m$^{-2}$). A rocket hanging under a balloon also needs a launcher and attitude control or spin-up, since fins do nothing at near-zero dynamic pressure; raising the gondola from 10\% to 30\% of the rocket mass to carry them gives \R{hwGfLo}--\R{hwGfHi}\,km and \R{hwGfSaveLo}--\R{hwGfSaveHi}\%. With every penalty at once (both vehicles designed for their own launch, a 20\,kg\,m$^{-2}$ nozzle wall, a 30\% gondola and a load-scaled envelope with $k=0.2$) the optimum stays at \R{hwAllLo}--\R{hwAllHi}\,km, but the saving depends on the tanks. For steel tanks it is \R{hwAllSsLo}--\R{hwAllSsHi}\%. For aluminium tanks it is \R{hwAllAlLo} to \R{hwAllAlHi}\%, and in \R{hwAllAlNeg} of the 7 aluminium families the rockoon is heavier than a well-designed ground-launched rocket. The location of the optimum is robust; whether a rockoon saves mass at all is not, and it is decided by how heavy the rocket's own dry structure is.
-
-Mass is not cost. As a simple test we priced the balloon system (envelope, gas and gondola) at $r$ times the rocket per kilogram. For $r=0.3$, 1, 3 and 10 the cost-optimal float altitude is \R{costALo}--\R{costAHi}, \R{costBLo}--\R{costBHi}, \R{costCLo}--\R{costCHi} and \R{costDLo}--\R{costDHi}\,km, and the smallest saving in this cost measure is \R{costASaveLo}, \R{costBSaveLo}, \R{costCSaveLo} and \R{costDSaveLo}\%. A balloon system that is dear per kilogram pulls the optimum down and, from about $r=3$, removes the advantage for the largest aluminium vehicles. We have no reliable prices for either, so $r$ is a free parameter here.
-
-The propellant must also survive the ascent. Nitrogen tetroxide freezes at about $-11\,^\circ$C, and the tropopause is near $-56\,^\circ$C. We sized a foam jacket (conductivity 0.03\,W\,m$^{-1}$\,K$^{-1}$, density 35$\kgm$) around two spherical tanks so that propellant loaded at 20\,$^\circ$C cools by no more than 25\,K during an ascent at 5\,m\,s$^{-1}$ and half an hour at float, taking the outside of the foam at the local air temperature and the propellant at its initial temperature, which overstates the heat loss. The required thickness is at most \R{insThickReq}\,mm; with a practical minimum of 25\,mm the jacket weighs \R{insBase}\,kg for the baseline vehicle, \R{insFracLo}--\R{insFracHi}\% of the rocket mass across the families. Carried by the gondola and released at ignition, it moves the optimum by less than \R{zsThShift}\,km. Radiative loss to a cold sky is not included and would need a test.
-
-The first part of H2 holds and the second does not: the optimum is set mainly by the atmosphere and the envelope, not by $\Pi_D$. Okninski \emph{et al.} \cite{okninski2016} found the highest launch altitude best without counting the mass of the balloon, and they also compared costs. Our objective, the launched mass with the balloon included, is a different one, so the two results answer different questions rather than contradicting each other; a cost weighting is tested below. The smallest families need balloons of a few hundred cubic metres, a size that could be flown on latex balloons or clusters of them, as Okninski \emph{et al.} proposed; our zero-pressure envelope model does not describe those, and the results for the two smallest families are the least reliable. The optimum found here is close to the altitude of about 15\,km above which Sarigul-Klijn \emph{et al.} \cite{sarigul2005} saw little further velocity gain for an orbital vehicle with a fixed nozzle, although their result did not include the mass of a carrier.
-
-\begin{figure}[!htb]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_optimum.pdf}
-\caption{(a) Total launched mass (rocket, gondola, envelope and hydrogen) for a 100\,km apogee, divided by the mass of the ground-launched rocket, against float altitude, for aluminium tanks. (b) Float altitude of minimum launched mass against the mass of the ground-launched vehicle. Bars show the range within 5\% of the minimum.}
-\label{fig:optimum}
-\end{figure}
-
-\begin{table}[!htb]
-\centering
-\caption{Mass-optimal float altitude for a 100\,km apogee: ground-launched gross mass, interpolated optimum altitude $z^{*}$, and the launched mass, rocket mass and balloon volume at the nearest computed altitude $z_g$.}
-\label{tab:optimum}
-\small
-\begin{tabular}{cccccccc}
-\toprule
-Tanks & $m_{\mathrm{fix}}$ & Ground-launched & $z^{*}$ & $z_g$ & Launched mass & Rocket & Balloon \\
- & (kg) & mass (kg) & (km) & (km) & (kg) & (kg) & (m$^3$) \\
-\midrule
-\tabin{tab_optimum.tex}
 \bottomrule
 \end{tabular}
 \end{table}
@@ -539,8 +607,8 @@ Finding & Varied & Outcome \\
 Balloon-launched apogee is insensitive to drag & Drag scale 0.5--2; computed build-up curve; Super Loki drag table; Sobol analysis & Robust (changes below 1\%) \\
 Ground drag loss scales with $\Pi_D(0)$ & 800 vehicles, four engines; cross-validation & Robust ($R^2=\R{cvLd}$ out of sample) \\
 Drag is the largest share of the gain & Float altitude, size, chamber pressure, body shape, drag table, Monte Carlo & Holds in every single-vehicle case except the slimmest body (0.25\,m), where the nozzle share is one point larger; \R{ensDragLargest}\% of the ensemble \\
-Mass-optimal float altitude near 20\,km (location) & 14 families, three target apogees, envelope density, gondola fraction, load-scaled envelope, thermal jacket, nozzle mass, fair ground comparator & Nominal \R{zsLo}--\R{zsHi}\,km; \R{zsVarLo}--\R{zsKlCHi}\,km across sensitivities; saving falls to \R{hwAllSaveLo}\% with every penalty \\
-Saving relative to ground launch & Fair comparator, nozzle mass, gondola, envelope law, cost weighting & Not robust: \R{fbSaveLo}--\R{fbSaveHi}\% fair; none for aluminium tanks with every penalty \\
+Mass-optimal float altitude near 20\,km (location) & 14 families, three target apogees, envelope density, gondola fraction, load-scaled envelope, thermal jacket, nozzle mass, comparators designed for their own launch, cost weighting, Monte Carlo over the penalties & Robust: nominal \R{zsLo}--\R{zsHi}\,km, \R{mcZLo}--\R{mcZHi}\,km over the Monte Carlo; explained by Eq.~(\ref{eq:rule}) \\
+Saving relative to ground launch & Comparators designed for ground launch, two-stage and solid comparators, nozzle mass, gondola, envelope law, cost weighting, Monte Carlo & Not robust: a saving in every sample for steel tanks, probability \R{mcPAlLo}--\R{mcPAlHi}\% for aluminium \\
 Drag-coefficient uncertainty vanishes once $\Pi_D(z_0)$ is below about 0.2 & Sobol indices with bootstrap intervals; four vehicles & Robust over $\Pi_D(0)=0.8$--3.7 \\
 Apogee ratio of 6.2 for the baseline & Drag scale \R{deaCdFit} and 2 (\R{cdDeaRatio}, \R{cdTwoRatio}); fair comparator (\R{optRatio}); best over-expanded ground nozzle (\R{sepRatio}); build-up drag (\R{buRatio}); Super Loki drag table (\R{acRatio}); tilt & Depends on the set-up \\
 Exact shares 52/31/17\% & Switching order, drag scale, chamber pressure, nozzle rule, body shape, drag table & Vary by about ten points; drag share \R{cdTwoFDrag}\% at a drag scale of 2 \\
@@ -590,7 +658,9 @@ Four kinds of error enter the results, and they differ greatly in size. (i) \emp
 
 \emph{What governs it.} One group, $\Pi_D(0)$, predicts the drag loss of a ground launch to within about \R{fitLdOneSd}\% for any vehicle and engine in the ensemble. It does not by itself predict the shares of the gain or the apogee ratio. Those need the chamber pressure, the body group, the thrust-to-weight ratio, the propellant fraction and the float altitude as well. The hypothesis of a single similarity parameter is rejected for the shares, even at a fixed float altitude. A six-group regression fits them, but it is a curve fit to our own model and we do not offer it as a law.
 
-\emph{Which float altitude.} When the balloon is counted, the launched mass is smallest at \R{zsLo}--\R{zsHi}\,km for vehicles differing by a factor of fifty in mass, and anything between \R{zsBandLo} and \R{zsBandHi}\,km is within 5\% of the best. This is a design rule that does not depend on the propellant: float near 20\,km, not as high as possible. It survives every penalty we tried. What does not survive is the size of the saving: against a well-designed ground rocket with light tanks, the balloon may not pay for itself. It follows from two facts. Most of the drag and nozzle benefit is collected in the first two or three scale heights of the atmosphere, and the balloon volume keeps growing six- to ninefold for each further 10\,km.
+\emph{Which float altitude.} When the balloon is counted, the launched mass is smallest at \R{zsLo}--\R{zsHi}\,km for vehicles differing by a factor of fifty in mass, and anything between \R{zsBandLo} and \R{zsBandHi}\,km is within 5\% of the best. This is a design rule that does not depend on the propellant: float near 20\,km, not as high as possible. Equation~(\ref{eq:rule}) explains it: at the optimum the envelope weighs $\tfrac32H_\rho$ times the suspended mass saved per unit height, so the location depends only logarithmically on the inputs, with a length scale of about 5\,km, and not at all on the ground-launched comparator. It moved by a few kilometres at most under every penalty, comparator, cost weighting and Monte Carlo sample we tried.
+
+\emph{Whether a rockoon saves mass.} Only if the rocket's dry structure is heavy. Against ground-launched vehicles designed for ground launch, including two-stage ones, and with the hardware that only a rockoon needs, a pressure-fed rocket with steel tanks saves \R{fcSsLo}--\R{fcSsHi}\% of the launched mass and does so in practically every Monte Carlo sample. With aluminium tanks the saving is \R{fcAlLo} to \R{fcAlHi}\%, smallest for the largest vehicles, and with solid motors it is \R{fcSoLo} to \R{fcSoHi}\%. If the balloon system costs more per kilogram than the rocket, the advantage shrinks further. A rockoon is therefore most attractive where a light ground-launched rocket cannot be built.
 
 \emph{What happens to the uncertainty.} Once $\Pi_D(z_0)$ is below about 0.2, which is 11--20\,km for the vehicles tested, the drag coefficient no longer contributes to the apogee uncertainty. A balloon launch removes the quantity that is hardest to predict without wind-tunnel or flight data, and leaves the dry mass and the engine efficiency, which can be measured on the ground.
 
@@ -598,13 +668,14 @@ Four kinds of error enter the results, and they differ greatly in size. (i) \emp
 
 The trajectory in the main results is vertical and one-dimensional; the planar model is used for the Super Loki check and for the tilt study of Sec.~\ref{sec:tilt}. Wind, balloon swing and attitude dynamics are not modelled. A rocket hanging under a balloon has essentially no dynamic pressure at ignition, so fins cannot stabilise it, and it swings; Shoyama \emph{et al.} \cite{shoyama2026} report that elevation oscillation of a suspended launcher is still an open problem. The model also ignores the balloon as an obstacle. A rocket fired vertically from beneath a balloon has to pass through it or beside it; for a hydrogen balloon and a hypergolic engine this would need a separate safety analysis.
 
-The baseline drag curve is assumed, though it lies close to a curve computed for a definite geometry. It reproduces six of the eight Deacon ground rounds to within about 3\%, but those flights cover only the first three seconds and a different body; with the Super Loki report's own drag tables the model over-predicts that rocket's apogee by about 6\%. The fits of Sec.~\ref{sec:collapse} are empirical regressions over the stated ranges and should not be extrapolated. The rockoon comparison needs one fitted mass per group of flights because the flight masses were not recorded, and it suggests that the model may understate the benefit of altitude for a rocket of high drag. The thermochemistry assumes shifting equilibrium and a single efficiency factor. Tank and bottle masses are those of ideal thin-walled spheres with one correction factor, helium is treated as an ideal gas, and no knock-down is applied for welded aluminium. The balloon model neglects superheat, ascent dynamics and the natural shape of the envelope. Except in Sec.~\ref{sec:robust}, the ``ground'' and ``balloon'' vehicles share one thrust-to-weight ratio and one body. The thermal check of Sec.~\ref{sec:optimum} is a conduction estimate only. The envelope law is not fitted to manufacturers' data, and the load-tape term is a sensitivity range rather than a published value. The thermochemistry was not cross-checked against NASA CEA run directly, and the efficiency of 0.92 is an assumption for a small 2\,MPa engine. The trajectories are not cross-checked against an established flight-dynamics code such as RocketPy, and wind and ignition-attitude scatter are treated only through the tilt study. We have not attempted a structural or priced cost analysis.
+The baseline drag curve is assumed, though it lies close to a curve computed for a definite geometry. It reproduces six of the eight Deacon ground rounds to within about 3\%, but those flights cover only the first three seconds and a different body; with the Super Loki report's own drag tables the model over-predicts that rocket's apogee by about 6\%. The fits of Sec.~\ref{sec:collapse} are empirical regressions over the stated ranges and should not be extrapolated. The rockoon comparison needs one fitted mass per group of flights because the flight masses were not recorded, and it suggests that the model may understate the benefit of altitude for a rocket of high drag. The thermochemistry assumes shifting equilibrium and a single efficiency factor. Tank and bottle masses are those of ideal thin-walled spheres with one correction factor, helium is treated as an ideal gas, and no knock-down is applied for welded aluminium. The balloon model neglects superheat, ascent dynamics and the natural shape of the envelope. Except in Sec.~\ref{sec:robust}, the ``ground'' and ``balloon'' vehicles share one thrust-to-weight ratio and one body. The thermal check of Sec.~\ref{sec:optimum} is a conduction estimate only. The envelope law is not fitted to manufacturers' data, and the load-tape term is a sensitivity range rather than a published value. The thermochemistry was not cross-checked against NASA CEA run directly, and the efficiency of 0.92 is an assumption for a small 2\,MPa engine. The trajectories are not cross-checked against an established flight-dynamics code such as RocketPy, and wind and ignition-attitude scatter are treated only through the tilt study. The two-stage and solid comparators use assumed booster fixed masses and a generic solid motor, and the Monte Carlo of Sec.~\ref{sec:saving} interpolates rocket masses from a grid of closures. We have not attempted a structural or priced cost analysis.
 
 \section{Conclusions}
 
 \begin{enumerate}
-\item The float altitude that minimises the launched mass for a 100\,km apogee is \R{zsLo}--\R{zsHi}\,km over a fifty-fold range of vehicle mass. It rises by about \R{zsSlope}\,km per decade of mass, contrary to the logarithmic dependence on $\Pi_D$ that we had expected, and it stays near 16--24\,km with nozzle mass, attitude-control hardware, a load-scaled envelope, a thermal jacket and a ground vehicle designed for ground launch included. Pricing the balloon system above the rocket per kilogram pulls it lower.
-\item The saving is less robust than its location: \R{zsSaveLo}--\R{zsSaveHi}\% against a ground vehicle of the same design, \R{fbSaveLo}--\R{fbSaveHi}\% with both designed for their own launch, and \R{hwAllSsLo}--\R{hwAllSsHi}\% for steel tanks but none for aluminium tanks once every rockoon-only penalty is counted.
+\item The float altitude that minimises the launched mass for a 100\,km apogee is \R{zsLo}--\R{zsHi}\,km over a fifty-fold range of vehicle mass. Over a Monte Carlo of the rockoon-only penalties it stays within \R{mcZLo}--\R{mcZHi}\,km. Pricing the balloon system above the rocket per kilogram pulls it lower.
+\item At the optimum the envelope weighs $\tfrac32H_\rho$ times the suspended mass saved per unit of altitude, Eq.~(\ref{eq:rule}). The optimum therefore depends on every input only through a logarithm multiplied by $L_{\mathrm{eff}}\approx\R{ruleLeffLo}$--\R{ruleLeffHi}\,km, and not on the ground-launched comparator; the rule reproduces the full model to within \R{ruleErrMax}\,km.
+\item The saving is not robust. Against ground-launched vehicles designed for ground launch, including two-stage ones, and with the central rockoon penalties, it is \R{fcSsLo}--\R{fcSsHi}\% for pressure-fed vehicles with steel tanks (a saving in every Monte Carlo sample), \R{fcAlLo} to \R{fcAlHi}\% with aluminium tanks (probability \R{mcPAlLo}--\R{mcPAlHi}\%), and \R{fcSoLo} to \R{fcSoHi}\% with solid motors. It is decided by how heavy the rocket's dry structure is.
 \item For a 301\,kg pressure-fed UDMH/N$_2$O$_4$ vehicle, ignition at 30\,km raises the apogee from \R{gndAp} to \R{balAp}\,km: \R{decFDrag}\% of the gain is drag, \R{decFNozzle}\% nozzle and \R{decFHead}\% head start (\R{dvbFDrag}/\R{dvbFNozzle}/\R{dvbFHead}\% in burnout velocity). The drag share lies between \R{ordDragLo} and \R{ordDragHi}\% depending on the switching order and is \R{cdTwoFDrag}\% if the drag is twice that assumed.
 \item The ballistic drag parameter $\Pi_D(0)=C_DA\,p_0/(m_0g_0)$ collapses the drag loss of a ground-launched sounding rocket (\R{fitLdOne} of the variance over \R{ensN} vehicles). It does not collapse the shares of the gain, even at a fixed float altitude (\R{fxThirtySd} for the drag share at 30\,km).
 \item The Sobol index of the drag coefficient falls below 0.01 at $\Pi_D(z_0)\approx$\,\R{h3PiLo}--\R{h3PiHi} for four vehicles whose crossing altitudes range from \R{h3ZLo} to \R{h3ZHi}\,km.
@@ -621,7 +692,7 @@ The authors used Claude (Anthropic), a generative AI model, in preparing this wo
 
 \section*{Code and data availability}
 
-\sloppy The repository is \url{https://github.com/FOUNDERACCRETION/rockoon-gain}. The scripts \texttt{rockoon\_model.py} (models), \texttt{similarity.py} (ensemble, optimum altitude and Sobol runs), \texttt{run\_analysis.py} (all numbers), \texttt{make\_tables.py}, \texttt{make\_figures.py} and \texttt{check\_paper.py} are provided with this submission. They require Python 3.10 or later with NumPy, SciPy, Matplotlib and Cantera 3.2.0. Every number in the text that is computed is read from \texttt{results.tex}, which \texttt{run\_analysis.py} writes. A single script, \texttt{run\_all.sh}, regenerates everything; a rebuild from a fresh copy with all generated files deleted reproduced \texttt{results.tex} byte for byte. The file \texttt{test\_model.py} contains eight checks of the model against values that can be worked out by hand.
+\sloppy The repository is \url{https://github.com/FOUNDERACCRETION/rockoon-gain}. The scripts \texttt{rockoon\_model.py} (models), \texttt{similarity.py} (ensemble, optimum altitude and Sobol runs), \texttt{extra\_tests.py} (Sobol indices for four vehicles, fixed-float ensembles), \texttt{final\_tests.py} (envelope rule, comparators designed for their own launch, two-stage and solid vehicles, Monte Carlo over the penalties), \texttt{run\_analysis.py} (all numbers), \texttt{make\_tables.py}, \texttt{make\_figures.py} and \texttt{check\_paper.py} are provided with this submission. They require Python 3.10 or later with NumPy, SciPy, Matplotlib and Cantera 3.2.0. Every number in the text that is computed is read from \texttt{results.tex}, which \texttt{run\_analysis.py} writes. A single script, \texttt{run\_all.sh}, regenerates everything; a rebuild from a fresh copy with all generated files deleted reproduced \texttt{results.tex} byte for byte. The file \texttt{test\_model.py} contains eight checks of the model against values that can be worked out by hand.
 
 \appendix
 
@@ -682,6 +753,21 @@ $p_c$ & \multicolumn{2}{c}{$\varepsilon$} & \multicolumn{2}{c}{$\Isp$ (s)} & \mu
 Term & $S_D$ & $S_N$ & $S_H$ & $\ln R$ \\
 \midrule
 \tabin{tab_coef.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+\centering
+\caption{The envelope rule (Sec.~\ref{sec:rule}) for the fourteen families: decay length $L$ of the rocket-mass saving, density scale height $H_\rho$ and $L_{\mathrm{eff}}$; optimum of the full model, from Eq.~(\ref{eq:rule}) and from Eq.~(\ref{eq:zstar}); and the two sides of Eq.~(\ref{eq:rule}) at the optimum of the full model, from the fitted rocket curve.}
+\label{tab:rule}
+\small
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+Tanks & $m_{\mathrm{fix}}$ & $L$ & $H_\rho$ & $L_{\mathrm{eff}}$ & $z^*$ model & Eq.~(\ref{eq:rule}) & Eq.~(\ref{eq:zstar}) & $m_e$ & $\tfrac32H_\rho|dm_s/dz|$ \\
+ & (kg) & (km) & (km) & (km) & (km) & (km) & (km) & (kg) & (kg) \\
+\midrule
+\tabin{tab_rule.tex}
 \bottomrule
 \end{tabular}
 \end{table}

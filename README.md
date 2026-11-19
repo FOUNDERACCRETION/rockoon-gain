@@ -1,6 +1,6 @@
 # Rockoon apogee-gain decomposition
 
-Code and manuscript for "The mass-optimal float altitude for balloon-launched sounding rockets, and where the rockoon advantage comes from" (Ramnani, Aduru, Reddy, 2026).
+Code and manuscript for "The mass-optimal float altitude for balloon-launched sounding rockets is robust; the mass saving is not" (Ramnani, Aduru, Reddy, 2026).
 
 ## Check validity
 
@@ -8,7 +8,7 @@ Code and manuscript for "The mass-optimal float altitude for balloon-launched so
                                  # values (NACA Deacon, NASA Super Loki, propellant benchmark), headline
                                  # results against results.json, unit tests, paper consistency
     python validate.py --full    # also regenerates every result in a temporary copy and compares
-                                 # the generated LaTeX files byte for byte (about 25 minutes; 46 checks)
+                                 # the generated LaTeX files byte for byte (about 70 minutes; 46 checks)
 
 ## Reproduce everything
 
