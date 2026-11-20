@@ -71,6 +71,41 @@ def external():
     r = rm.fly2d(28.32, 16.87, 85.47e-4, 4450 * LBF, 2.0, rm.cd_superloki, 80.0, m2=6.12, area2=9.84e-4, cd_fn2=rm.cd_dart)
     check(g, 'Super Loki burnout velocity (NASA CR-61238)', r['v_b'], 5893 * FT, 0.05, 'm/s')
     check(g, 'Super Loki apogee (NASA CR-61238 trajectory)', r['apogee'], 113.4e3, 0.08, 'm')
+    C = json.load(open(os.path.join(ROOT, 'results', 'cea_check.json')))
+    check(g, 'vacuum Isp at the 30 km area ratio vs NASA CEA run directly', C['cantera']['isp_vac_b'], C['design_shift']['isp_vac'][3], 0.005, 's')
+    check(g, 'vacuum Isp at the ground area ratio vs NASA CEA run directly', C['cantera']['isp_vac_g'], C['design_shift']['isp_vac'][2], 0.005, 's')
+    check(g, 'c* vs NASA CEA run directly', C['cantera']['cstar'], C['design_shift']['cstar'], 0.005, 'm/s')
+    P = json.load(open(os.path.join(ROOT, 'results', 'rocketpy_check.json')))
+    for k in ('ground_3DOF', 'ground_6DOF', 'balloon_3DOF', 'balloon_6DOF'):
+        check(g, 'baseline apogee vs RocketPy (%s)' % k.replace('_', ', '), P[k]['ours_apogee'], P[k]['apogee'], 0.002, 'm')
+    A = json.load(open(os.path.join(ROOT, 'results', 'aerobee_check.json')))
+    for r in A['rows']:
+        if r['nominal']:
+            check(g, 'Aerobee 150 nominal peak altitude (%s)' % r['label'], r['model_peak'], r['peak'], 0.05, 'm')
+            check(g, 'Aerobee 150 nominal burnout velocity (%s)' % r['label'], r['model_vb'], r['vb'], 0.03, 'm/s')
+    flag(g, 'Aerobee 150 engine: delivered/ideal vacuum specific impulse inside 0.85-0.95', 0.85 <= A['eta_vac'] <= 0.95, '%.3f' % A['eta_vac'])
+
+
+def rule():
+    g = 'Envelope rule (general_rule.py)'
+    import general_rule as gr
+    R = json.load(open(os.path.join(ROOT, 'results', 'results.json')))
+    fr = [r for r in R['revision']['analytic'] if r['mat'] == 'Al6061T6' and r['mfix'] == 80.0][0]
+    cv = gr.Curve(fr['minf'], fr['B'], fr['L'])
+    film = gr.Law('area', '', [(0.030 * gr.K36, 2 / 3, 0.0)])
+    zx = gr.exact(cv, film)
+    check(g, 'film law: exact condition equals direct minimisation (two sides of Eq. general)', gr.ratio(cv, film, zx), 1.0, 1e-5)
+    check(g, 'film law: optimum on the fitted curve equals the tabulated rule optimum', zx, fr['z_rule'], 2e-3, 'km')
+    st = gr.state(cv, film, zx)
+    check(g, 'film law: envelope = (3/2) H |dm_s/dz| at the optimum', st['me'], 1.5 * st['H'] * abs(cv.dms(zx)), 1e-5, 'kg')
+    for mu in (0.3, 3.0):
+        zm = gr.exact(cv, film, mu=mu)
+        check(g, 'weighted objective, mu = %g: two sides of the condition' % mu, gr.ratio(cv, film, zm, mu=mu), 1.0, 1e-5)
+    clu = gr.Law('cluster', '', [(R['general']['mu1'], 1.0, 0.0)], lift=gr.LIFT_LATEX)
+    z5 = gr.exact(gr.Curve(fr['minf'], fr['B'], fr['L'], g=0.05), clu); z20 = gr.exact(gr.Curve(fr['minf'], fr['B'], fr['L'], g=0.20), clu)
+    check(g, 'cluster law (alpha + beta = 1): optimum independent of the gondola fraction', z20 - z5 + 1.0, 1.0, 1e-4, 'km')
+    z1, _ = gr.one_step(cv, film, 20.0)
+    check(g, 'one-step estimate from 20 km against the exact optimum', z1, zx, 0.02, 'km')
 
 
 def headline():
@@ -120,7 +155,8 @@ def full():
     for sub in ('results', os.path.join('code', 'thermo_table.json'), os.path.join('paper', 'results.tex')):
         pth = os.path.join(dst, sub)
         shutil.rmtree(pth) if os.path.isdir(pth) else os.remove(pth)
-    for script in ('rockoon_model.py', 'similarity.py', 'extra_tests.py', 'final_tests.py', 'run_analysis.py', 'make_tables.py'):
+    for script in ('rockoon_model.py', 'similarity.py', 'extra_tests.py', 'cea_check.py', 'rocketpy_check.py', 'revision_tests.py',
+                   'realdata_tests.py', 'aerobee_check.py', 'run_analysis.py', 'make_tables.py'):
         p = subprocess.run([sys.executable, script], cwd=os.path.join(dst, 'code'), capture_output=True, text=True)
         if p.returncode != 0:
             flag(g, script, False, p.stderr.strip().splitlines()[-1][:60])
@@ -131,9 +167,9 @@ def full():
 
 
 def main():
-    physics(); external(); headline(); paper()
+    physics(); external(); headline(); rule(); paper()
     if '--full' in sys.argv:
-        print('Regenerating every result in a temporary copy (about 70 minutes)...')
+        print('Regenerating every result in a temporary copy (about an hour on 2 cores)...')
         full()
     last = None
     w = max(len(r[1]) for r in ROWS)

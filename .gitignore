@@ -7,3 +7,5 @@ __pycache__/
 *.synctex.gz
 arxiv_submission.tar.gz
 .pytest_cache/
+arxiv_build/
+arxiv_check.pdf
