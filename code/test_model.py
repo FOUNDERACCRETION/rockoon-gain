@@ -55,3 +55,31 @@ def test_tank_mass_scales_with_pressure():
     a = rm.tank_fraction(3e6, 2.4, 2700.0, 276e6)
     b = rm.tank_fraction(6e6, 2.4, 2700.0, 276e6)
     assert abs(b / a - 2.0) < 1e-12
+
+
+def test_fineness_drag_vanishes_at_the_reference_fineness():
+    T, p, rho = rm.atmosphere(5e3)
+    a = math.sqrt(1.4 * rm.RSTAR / rm.M_AIR * T)
+    same = rm.FinenessDrag(0.30, 10.0); slim = rm.FinenessDrag(0.30, 25.0)
+    for M in (0.5, 2.0, 4.0):
+        assert abs(same(M, rho, T, M * a) - rm.cd_generic(M)) < 1e-12
+        assert slim(M, rho, T, M * a) > rm.cd_generic(M)
+
+
+def test_envelope_rule_reduces_to_the_film_rule():
+    import general_rule as gr
+    cv = gr.Curve(130.0, 150.0, 9.5)
+    film = gr.Law('area', '', [(0.030 * gr.K36, 2 / 3, 0.0)])
+    z = gr.exact(cv, film)
+    st = gr.state(cv, film, z)
+    assert abs(st['me'] / (1.5 * st['H'] * abs(cv.dms(z))) - 1.0) < 1e-5
+    assert abs(st['eps'] - 1.0 / (st['alpha'] * st['Lam'] / st['H'] - st['beta'])) < 1e-6
+
+
+def test_envelope_rule_holds_for_a_two_term_law_and_a_price():
+    import general_rule as gr
+    cv = gr.Curve(130.0, 150.0, 9.5)
+    law = gr.Law('fitted', '', [(0.0071 * gr.K36, 2 / 3, 0.0), (6.77e-3, 1 / 3, 1.0)])
+    for mu in (0.4, 1.0, 3.0):
+        z = gr.exact(cv, law, mu=mu)
+        assert abs(gr.ratio(cv, law, z, mu=mu) - 1.0) < 1e-5

@@ -1,4 +1,3 @@
-import math
 """Draw every figure of the paper from results/results.json and the model."""
 import json, math, os
 import numpy as np
@@ -171,19 +170,73 @@ def fig_montecarlo():
 
 
 def fig_appendix():
-    fig, ax = plt.subplots(1, 3, figsize=(W2, 2.3)); fig.subplots_adjust(wspace=0.45)
-    z = np.linspace(0, 44, 300)
-    ax[0].plot([rm.atmosphere(x * 1e3)[0] for x in z], z, color=BLUE, label='USSA 1976')
-    ax[0].plot([rm.lapse_extrapolation(x * 1e3)[0] for x in z], z, color=ORANGE, label='lapse rate\nextrapolated')
-    ax[0].axhline(30, color=GREY, lw=0.8); ax[0].set_xlabel('Temperature (K)'); ax[0].set_ylabel('Altitude (km)'); ax[0].set_xlim(0, 300); ax[0].legend(loc='upper left', fontsize=6.5)
+    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.4)); fig.subplots_adjust(wspace=0.35)
     sw = R_T['of_sweep']; of = [s['of'] for s in sw]
-    ax[1].plot(of, [s['shift'] for s in sw], color=BLUE, label='shifting'); ax[1].plot(of, [s['frozen'] for s in sw], color=ORANGE, label='frozen')
-    ax[1].axhline(316.7, color=GREY, lw=0.8); ax[1].text(2.4, 318, '316.7 s (proposal)', fontsize=6.5, color=GREY)
-    ax[1].set_xlabel('Mixture ratio O/F'); ax[1].set_ylabel('Ideal vacuum $I_{sp}$ (s), $\\varepsilon$ = 36.4'); ax[1].legend(loc='lower right')
-    ax[2].plot(of, [s['Tc'] for s in sw], color=BLUE); ax[2].set_xlabel('Mixture ratio O/F'); ax[2].set_ylabel('Chamber temperature (K)')
-    for a, s in zip(ax, ('(a)', '(b)', '(c)')):
-        a.text(-0.24, 1.04, s, transform=a.transAxes, fontweight='bold', fontsize=9, va='bottom')
-    save(fig, 'fig_appendix')
+    ax[0].plot(of, [s['shift'] for s in sw], color=BLUE, label='shifting (Cantera)'); ax[0].plot(of, [s['frozen'] for s in sw], color=ORANGE, label='frozen (Cantera)')
+    C = json.load(open(os.path.join(ROOT, 'results', 'cea_check.json')))['sweep']
+    ax[0].plot([c['of'] for c in C], [c['cea_shift'] for c in C], 'o', mfc='none', color=BLUE, ms=4.5, label='shifting (NASA CEA)')
+    ax[0].plot([c['of'] for c in C], [c['cea_frozen'] for c in C], 's', mfc='none', color=ORANGE, ms=4.5, label='frozen (NASA CEA)')
+    ax[0].set_xlabel('Mixture ratio O/F'); ax[0].set_ylabel('Ideal vacuum $I_{sp}$ (s), $\\varepsilon$ = 36.4'); ax[0].legend(loc='lower right', fontsize=6.3)
+    ax[1].plot(of, [s['Tc'] for s in sw], color=BLUE, label='Cantera')
+    ax[1].plot([c['of'] for c in C], [c['cea_Tc'] for c in C], 'o', mfc='none', color=BLUE, ms=4.5, label='NASA CEA')
+    ax[1].set_xlabel('Mixture ratio O/F'); ax[1].set_ylabel('Chamber temperature (K)'); ax[1].legend(loc='lower right', fontsize=6.5)
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_appendix')
+
+
+def fig_analytic():
+    """The envelope rule: at the optimum the envelope weighs 3H/2 times the suspended-mass saving per kilometre."""
+    S = json.load(open(os.path.join(ROOT, 'results', 'similarity.json')))['system']
+    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.6)); fig.subplots_adjust(wspace=0.33)
+    cols = {20.0: GREEN, 80.0: BLUE, 320.0: PURPLE}
+    for mfix, c in cols.items():
+        v = sorted([r for r in S if r['mat'] == 'Al6061T6' and r['mfix'] == mfix and r['target'] == 100e3 and r['sigma'] == 0.030
+                    and r['gf'] == 0.10 and r['z'] > 0], key=lambda r: r['z'])
+        z = np.array([r['z'] for r in v]); ms = 1.1 * np.array([r['m0'] for r in v]); me = np.array([r['env'] for r in v])
+        dms = -np.gradient(ms, z)
+        H = np.array([-0.1 / math.log(rm.atmosphere(zz * 1e3 + 50)[2] / rm.atmosphere(zz * 1e3 - 50)[2]) for zz in z])
+        sel = (z >= 7.5) & (z <= 35)
+        ax[0].semilogy(z[sel], me[sel], color=c, ls='--', lw=1.1)
+        ax[0].semilogy(z[sel], 1.5 * H[sel] * dms[sel], color=c, lw=1.4, label='$m_{fix}$ = %.0f kg' % mfix)
+        o = [x for x in R['optimum'] if x['mat'] == 'Al6061T6' and x['mfix'] == mfix and x['target'] == 100.0][0]
+        ax[0].axvline(o['zstar'], color=c, lw=0.6, ls=':')
+    ax[0].set_xlabel('Float altitude (km)'); ax[0].set_ylabel('Mass (kg)')
+    ax[0].plot([], [], color=GREY, lw=1.4, label='$\\frac{3}{2}H\\,|dm_s/dz|$'); ax[0].plot([], [], color=GREY, ls='--', lw=1.1, label='envelope $m_e$')
+    ax[0].legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), fontsize=6, ncol=3, columnspacing=0.8, handlelength=1.6)
+    an = R['revision']['analytic']
+    for mat, col, mk, lab in (('Al6061T6', BLUE, 'o', 'aluminium tanks'), ('SS321', ORANGE, 's', 'steel tanks')):
+        a = [r for r in an if r['mat'] == mat]
+        ax[1].plot([r['z_model'] for r in a], [r['z_rule'] for r in a], mk, color=col, ms=4, label=lab)
+    ax[1].plot([15, 25], [15, 25], color=GREY, lw=0.8)
+    ax[1].set_xlim(15.5, 24.5); ax[1].set_ylim(15.5, 24.5)
+    ax[1].set_xlabel('Optimum of the full model, $z^*$ (km)'); ax[1].set_ylabel('Optimum from the envelope rule (km)'); ax[1].legend(loc='upper left', fontsize=6.5)
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_analytic')
+
+
+def fig_saving():
+    """Monte Carlo over the rockoon-only penalties: the location of the optimum against the size of the saving."""
+    mc = R['revision']['mc_saving']
+    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.5)); fig.subplots_adjust(wspace=0.3)
+    labels, pos = [], []
+    for j, (mat, col) in enumerate((('Al6061T6', BLUE), ('SS321', ORANGE))):
+        for i, mfix in enumerate((10, 20, 40, 80, 160, 320, 640)):
+            k = '%s|%g' % (mat, mfix); x = i + 8 * j
+            for a, key, sc in ((ax[0], 'save', 100.0), (ax[1], 'z', 1.0)):
+                b = a.boxplot([sc * np.array(mc[k][key])], positions=[x], widths=0.6, whis=(5, 95), showfliers=False, patch_artist=True)
+                for p in b['boxes']:
+                    p.set_facecolor(col); p.set_alpha(0.55); p.set_edgecolor(col)
+                for part in ('whiskers', 'caps', 'medians'):
+                    for l in b[part]:
+                        l.set_color(col if part != 'medians' else 'k'); l.set_linewidth(0.9)
+            labels.append('%d' % mfix); pos.append(x)
+    for a in ax:
+        a.set_xticks(pos); a.set_xticklabels(labels, rotation=90, fontsize=6.3); a.set_xlim(-1, 15)
+        a.set_xlabel('$m_{fix}$ (kg)')
+        a.text(3, 0.97, 'aluminium tanks', transform=a.get_xaxis_transform(), ha='center', va='top', fontsize=7, color=BLUE)
+        a.text(11, 0.97, 'steel tanks', transform=a.get_xaxis_transform(), ha='center', va='top', fontsize=7, color=ORANGE)
+    ax[0].axhline(0, color=GREY, lw=0.8); ax[0].set_ylabel('Saving in launched mass (%)')
+    ax[0].set_ylim(-30, 85)
+    ax[1].set_ylabel('Mass-optimal float altitude (km)'); ax[1].set_ylim(10, 33)
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_saving')
 
 
 def fig_lapse():
@@ -265,52 +318,42 @@ def fig_sobol():
     panel(ax[0], '(a)'); panel(ax[1], '(b)'); panel(ax[2], '(c)'); save(fig, 'fig_sobol')
 
 
-def fig_rule():
-    F = json.load(open(os.path.join(ROOT, 'results', 'final.json')))
-    ru = F['rule']['families']
-    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.6)); fig.subplots_adjust(wspace=0.35)
-    for mf, c in ((20.0, GREEN), (80.0, BLUE), (320.0, PURPLE)):
-        f = [x for x in ru if x['mat'] == 'Al6061T6' and x['mfix'] == mf][0]
-        z = np.linspace(10, 35, 120)
-        me = [rm.balloon(1.10 * (f['minf'] + f['B'] * math.exp(-x / f['L'])), x * 1e3)[1] for x in z]
-        hr = []
-        for x in z:
-            e = 50.0; zz = x * 1e3
-            hr.append(-rm.atmosphere(zz)[2] / ((rm.atmosphere(zz + e)[2] - rm.atmosphere(zz - e)[2]) / (2 * e)))
-        rhs = [1.5 * h * 1.10 * f['B'] / f['L'] * math.exp(-x / f['L']) / 1e3 for h, x in zip(hr, z)]
-        ax[0].semilogy(z, me, '--', color=c); ax[0].semilogy(z, rhs, '-', color=c, label='$m_{\\mathrm{fix}}$ = %.0f kg' % mf)
-        ax[0].axvline(f['z_model'], color=c, lw=0.6, ls=':')
-    ax[0].set_xlabel('Float altitude (km)'); ax[0].set_ylabel('Mass (kg)'); ax[0].legend(fontsize=6, loc='upper left')
-    ax[0].text(0.97, 0.05, 'dashed: envelope $m_e$\nsolid: $\\frac{3}{2}H_\\rho|dm_s/dz|$', transform=ax[0].transAxes, ha='right', fontsize=6)
-    for mat, c, mk in (('Al6061T6', BLUE, 'o'), ('SS321', ORANGE, 's')):
-        v = [x for x in ru if x['mat'] == mat]
-        ax[1].plot([x['z_model'] for x in v], [x['z_rule'] for x in v], mk, color=c, ms=4, label='aluminium tanks' if mat == 'Al6061T6' else 'steel tanks')
-    ax[1].plot([16, 24], [16, 24], color=GREY, lw=0.8)
-    ax[1].set_xlabel('Optimum of the full model, $z^*$ (km)'); ax[1].set_ylabel('Optimum from the envelope rule (km)'); ax[1].legend(fontsize=6)
-    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_rule')
-
-
-def fig_mcsave():
-    F = json.load(open(os.path.join(ROOT, 'results', 'final.json')))
-    mc = F['mc']
-    fig, ax = plt.subplots(1, 2, figsize=(W2, 2.6)); fig.subplots_adjust(wspace=0.33)
-    for k, key, scale, yl in ((0, 'save_q', 100, 'Saving in launched mass (%)'), (1, 'z_q', 1, 'Mass-optimal float altitude (km)')):
-        pos = 0
-        ticks, labs = [], []
-        for mat, c in (('Al6061T6', BLUE), ('SS321', ORANGE)):
-            for o in [x for x in mc if x['mat'] == mat]:
-                q = [scale * x for x in o[key]]
-                ax[k].add_patch(plt.Rectangle((pos - 0.3, q[1]), 0.6, q[3] - q[1], color=c, alpha=0.5))
-                ax[k].plot([pos - 0.3, pos + 0.3], [q[2]] * 2, color=c); ax[k].plot([pos, pos], [q[0], q[1]], color=c, lw=0.8); ax[k].plot([pos, pos], [q[3], q[4]], color=c, lw=0.8)
-                ticks.append(pos); labs.append('%.0f' % o['mfix']); pos += 1
-            pos += 1
-        ax[k].set_xticks(ticks); ax[k].set_xticklabels(labs, rotation=90, fontsize=6); ax[k].set_xlim(-1, pos - 1)
-        ax[k].set_xlabel('$m_{\\mathrm{fix}}$ (kg): aluminium (blue), steel (orange)'); ax[k].set_ylabel(yl)
-    ax[0].axhline(0, color=GREY, lw=0.8)
-    panel(ax[0], '(a)'); panel(ax[1], '(b)'); save(fig, 'fig_mcsave')
+def fig_general():
+    """The envelope rule for several envelope laws: the ratio of the two sides of the optimum condition against altitude,
+    the optimum against vehicle size, and the one-step estimate against the exact optimum."""
+    Gn = R['general']['laws']
+    sty = {'area': (BLUE, '-', 'o', 'film'), 'load': (GREY, '--', 'v', 'film + load'),
+           'fitted': (ORANGE, '-', 's', 'fitted'), 'cluster': (GREEN, '-.', '^', 'cluster')}
+    fig, ax = plt.subplots(1, 3, figsize=(W2, 2.45)); fig.subplots_adjust(wspace=0.42)
+    for tag, (c, ls, mk, lab) in sty.items():
+        ln = Gn[tag]['line']; z = np.array(ln['z']); r = np.array(ln['ratio'], dtype=float)
+        ax[0].semilogy(z, r, color=c, ls=ls, lw=1.3, label=lab)
+        zx = [x for x in Gn[tag]['rows'] if x['mat'] == 'Al6061T6' and x['mfix'] == 80.0][0]['z_exact']
+        ax[0].plot([zx], [1.0], mk, color=c, ms=4, mec='white', mew=0.6, zorder=5)
+    ax[0].axhline(1.0, color='0.4', lw=0.6)
+    ax[0].set_xlim(8, 36); ax[0].set_ylim(0.03, 30)
+    ax[0].set_xlabel('Float altitude (km)'); ax[0].set_ylabel('Ratio of the two sides, $\\mathcal{R}$')
+    ax[0].legend(loc='lower left', fontsize=6, handlelength=2.4, borderaxespad=0.2)
+    for tag in ('area', 'fitted', 'cluster'):
+        c, ls, mk, lab = sty[tag]
+        for mat, fill in (('Al6061T6', c), ('SS321', 'white')):
+            v = [x for x in Gn[tag]['rows'] if x['mat'] == mat]
+            ax[1].semilogx([x['ground'] for x in v], [x['z_exact'] for x in v], color=c, ls=ls, lw=0.9)
+            ax[1].semilogx([x['ground'] for x in v], [x['z_grid'] for x in v], mk, color=c, mfc=fill, ms=3.6, mew=0.9,
+                           label=lab if mat == 'Al6061T6' else None)
+    ax[1].set_xlabel('Ground-launched mass (kg)'); ax[1].set_ylabel('Optimum float altitude $z^*$ (km)')
+    ax[1].set_ylim(15.5, 27.0); ax[1].legend(loc='lower center', fontsize=6, ncol=3, columnspacing=0.8, handletextpad=0.1, bbox_to_anchor=(0.58, 0.99))
+    lo, hi = 15.5, 27.0
+    for tag, (c, ls, mk, lab) in sty.items():
+        v = Gn[tag]['rows']
+        ax[2].plot([x['z_exact'] for x in v], [x['z_one'] for x in v], mk, color=c, ms=3.4, mfc='none' if tag == 'load' else c, mew=0.8, label=lab)
+    ax[2].plot([lo, hi], [lo, hi], color='0.4', lw=0.7)
+    ax[2].set_xlim(lo, hi); ax[2].set_ylim(lo, hi)
+    ax[2].set_xlabel('Exact optimum (km)'); ax[2].set_ylabel('One step from 20 km (km)')
+    panel(ax[0], '(a)'); panel(ax[1], '(b)'); panel(ax[2], '(c)'); save(fig, 'fig_general')
 
 
 if __name__ == '__main__':
     R_T = json.load(open(os.path.join(rm.HERE, 'thermo_table.json')))
-    fig_inputs(); fig_validation(); fig_trajectory(); fig_decomposition(); fig_scaling(); fig_closure(); fig_montecarlo(); fig_appendix(); fig_lapse(); fig_collapse(); fig_optimum(); fig_sobol(); fig_rule(); fig_mcsave()
+    fig_inputs(); fig_validation(); fig_trajectory(); fig_decomposition(); fig_scaling(); fig_closure(); fig_montecarlo(); fig_appendix(); fig_lapse(); fig_collapse(); fig_optimum(); fig_sobol(); fig_analytic(); fig_saving(); fig_general()
     print('figures written to', OUT)

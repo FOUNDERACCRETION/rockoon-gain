@@ -4,10 +4,13 @@ import json, os, re, sys
 import rockoon_model as rm
 ROOT = os.path.dirname(rm.HERE)
 tex = open(os.path.join(ROOT, 'paper', 'paper.tex')).read()
+sup = open(os.path.join(ROOT, 'supplement', 'attribution.tex')).read()
 res = open(os.path.join(ROOT, 'paper', 'results.tex')).read()
 keys = set(re.findall(r'res@(\w+)\\endcsname', res))
 used = set(re.findall(r'\\R\{(\w+)\}', tex))
 bad = sorted(used - keys)
+bad_sup = sorted(set(re.findall(r'\\R\{(\w+)\}', sup)) - keys)
+tabs = [t for t in re.findall(r'\\tabin\{([^}]*)\}', tex + sup) if not os.path.exists(os.path.join(ROOT, 'paper', t))]
 cites = set(c.strip() for grp in re.findall(r'\\cite\{([^}]*)\}', tex) for c in grp.split(','))
 bibs = set(re.findall(r'\\bibitem\{(\w+)\}', tex))
 labels = set(re.findall(r'\\label\{([^}]*)\}', tex)); refs = set(re.findall(r'\\ref\{([^}]*)\}', tex))
@@ -16,9 +19,11 @@ residue = [w for w in ('TODO', 'FIXME', 'XXX', 'TBD', 'VERIFY', 'placeholder', '
 comments = [l for l in tex.splitlines() if re.search(r'(?<!\\)%', l)]
 R = json.load(open(os.path.join(ROOT, 'results', 'results.json')))
 stale = os.path.getmtime(os.path.join(ROOT, 'results', 'results.json')) < max(
-    os.path.getmtime(os.path.join(rm.HERE, f)) for f in ('rockoon_model.py', 'run_analysis.py', 'similarity.py'))
+    os.path.getmtime(os.path.join(rm.HERE, f)) for f in ('rockoon_model.py', 'run_analysis.py', 'similarity.py', 'revision_tests.py', 'revision_analysis.py',
+                                                         'general_rule.py', 'realdata_tests.py', 'realdata_analysis.py', 'aerobee_check.py'))
 ok = True
-for name, items in (('undefined result keys', bad), ('cited but not in bibliography', sorted(cites - bibs)),
+for name, items in (('undefined result keys', bad), ('undefined result keys, supplement', bad_sup), ('missing table files', tabs),
+                    ('cited but not in bibliography', sorted(cites - bibs)),
                     ('in bibliography but never cited', sorted(bibs - cites)), ('undefined cross-references', sorted(refs - labels)),
                     ('residue words', residue), ('LaTeX comments', comments)):
     print('%-34s %s' % (name + ':', items if items else 'none'))
