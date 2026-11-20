@@ -75,6 +75,21 @@ def balloon(m_susp, z, M_gas=M_H2, sigma=0.030, k_load=0.0):
     return V, m_env, (m_susp + m_env) * M_gas / (M_AIR - M_gas)
 
 
+def balloon_law2(m_susp, z, a, b, M_gas=M_H2, mult=1.0):
+    """Zero-pressure balloon at float with a two-term envelope law, m_e = mult (a A + b m_s V^(1/3)).
+
+    The first term is a minimum-gauge film (a in kg/m2 on the equal-volume sphere); the second is film and tapes
+    sized by the load they carry, whose thickness scales as load over size, so their mass as load x size (b in 1/m).
+    a and b are fitted to published balloons in revision_tests.py."""
+    T, p, _ = atmosphere(z)
+    dens = p * (M_AIR - M_gas) / (RSTAR * T)
+    k = (36.0 * math.pi) ** (1.0 / 3.0)
+    env = lambda V: mult * (a * k * V ** (2.0 / 3.0) + b * m_susp * V ** (1.0 / 3.0))
+    V = brentq(lambda V: V * dens - m_susp - env(V), 1e-3, 1e10)
+    m_env = env(V)
+    return V, m_env, (m_susp + m_env) * M_gas / (M_AIR - M_gas)
+
+
 def insulation_mass(mp, z_float, of=2.4, rate=5.0, hold=1800.0, T0=293.15, dT=25.0, c=1500.0,
                     k_ins=0.030, rho_ins=35.0, t_min=0.025):
     """Mass of a foam jacket that keeps the propellant above freezing during ascent and float.
@@ -385,6 +400,24 @@ class DragBuildUp:
         return sum(self.parts(M, rho, T, v, base_frac).values())
 
 
+class FinenessDrag:
+    """Generic drag curve with skin friction that grows with the fineness of the body.
+
+    The generic curve stands for the baseline body (fineness 10). For another fineness the body-and-fin friction
+    term of the component build-up above is evaluated for a body of the same diameter and the new length, the
+    same term at fineness 10 is subtracted, and the difference is added to the generic curve. A slender body then
+    pays for its larger wetted area, which the generic curve alone does not charge."""
+    full = True
+
+    def __init__(self, d, fineness):
+        geo = lambda fin: DragBuildUp(d=d, length=fin * d, nose=3.0 * d, n_fins=4, span=d, c_root=1.5 * d,
+                                      c_tip=0.75 * d, thick=0.025 * d)
+        self.body, self.ref = geo(fineness), geo(10.0)
+
+    def __call__(self, M, rho, T, v, base_frac=1.0):
+        return cd_generic(M) + self.body.friction(M, rho, T, v) - self.ref.friction(M, rho, T, v)
+
+
 def fly_tilted(m0, mp, d, mdot, isp_vac, Ae, z0, tilt_deg, mode='fixed', rail=10.0, cd_scale=1.0):
     """Planar flight of the liquid vehicle ignited at an angle tilt_deg from the vertical.
 
@@ -489,10 +522,14 @@ def diameter(m0, d_ref=0.40, m_ref=301.27, fineness=10.0):
     return d_ref * (m0 / m_ref) ** (1.0 / 3.0) * (10.0 / fineness) ** (1.0 / 3.0)
 
 
-def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle', cd_fn=None, sep=1.0, fineness=10.0):
+def vehicle_run(m0, mp, z_ign, d=None, tw=4.0, eta=0.92, cd_scale=1.0, switches=None, v0=0.0, key='nozzle', cd_fn=None, sep=1.0, fineness=10.0,
+                fin_drag=False):
     """Design the nozzle for the ignition altitude and fly. switches = (kin, drag, nozzle) booleans
-    selecting the balloon (True) or ground (False) environment for each effect."""
+    selecting the balloon (True) or ground (False) environment for each effect. With fin_drag the skin
+    friction grows with the fineness (FinenessDrag)."""
     d = diameter(m0, fineness=fineness) if d is None else d
+    if fin_drag:
+        cd_fn = FinenessDrag(d, fineness)
     F = tw * m0 * G0
     if switches is None:
         nz = Nozzle(z_ign, F, d, eta, key, sep)
@@ -578,6 +615,20 @@ def close_vehicle_skirt(z_f, m_fix, f_feed, target=100e3, areal=10.0, **kw):
         extra = new
     r['skirt'] = extra
     return r
+
+
+def two_stage_apogee(m02, mp2, m01, mp1, d, tw1, tw2, sep1=0.7, key='nozzle', eta=0.92, cd_scale=1.0, cd_fn=None):
+    """Ground-launched two-stage vehicle, vertical, staging at first-stage burnout with no coast.
+
+    m01 is the lift-off mass (both stages), m02 the mass of the second stage at ignition. The first-stage nozzle is
+    chosen for the ground (exit pressure down to sep1 of ambient); the second-stage nozzle for the staging altitude,
+    as for a balloon launch. Returns (apogee, second-stage nozzle)."""
+    nz1 = Nozzle(0.0, tw1 * m01 * G0, d, eta, key, sep1)
+    r1 = fly(m01, mp1, d, nz1.mdot, nz1.isp_vac, nz1.Ae, z_kin=0.0, cd_scale=cd_scale, coast=False, cd_fn=cd_fn)
+    z1, v1 = r1['h_b'], r1['v_b']
+    nz2 = Nozzle(z1, tw2 * m02 * G0, d, eta, key, 1.0)
+    r2 = fly(m02, mp2, d, nz2.mdot, nz2.isp_vac, nz2.Ae, z_kin=z1, v0=v1, cd_scale=cd_scale, cd_fn=cd_fn)
+    return r2['apogee'], nz2
 
 
 def close_vehicle(z_f, m_fix, f_feed, target=100e3, **kw):

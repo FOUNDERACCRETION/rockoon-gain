@@ -152,6 +152,18 @@ def main():
     put('rkAllRms', 100 * math.sqrt(np.mean([(r['err'] / 100) ** 2 for r in rows])), '{:.0f}')
     with open(os.path.join(ROOT, 'paper', 'tab_rockoons.tex'), 'w') as f_:
         f_.write('\n'.join('%s & %.1f & %.1f & %.1f & $%+.0f$ \\\\' % (r['name'], r['fire'], r['obs'], r['model'], r['err']) for r in rows) + '\n')
+    # the same flights with an independently reported gross mass (no fit): Encyclopedia Astronautica lists the
+    # Deacon Rockoon at 205 lb gross with a 37 lb payload
+    m_ax = 205.0 * LB
+    ax_err = {grp: [100 * (rk_ap(m_ax, a_) / (b_ * MI / 1e3) - 1) for _, a_, b_ in D] for grp, D in (('Sui', SUI), ('Nrl', NRLF))}
+    put('rkAxMass', m_ax, '{:.0f}')
+    for grp in ('Sui', 'Nrl'):
+        put('rkAx' + grp + 'Mean', np.mean(ax_err[grp]), '{:.0f}'); put('rkAx' + grp + 'Rms', math.sqrt(np.mean(np.square(ax_err[grp]))), '{:.0f}')
+    allax = ax_err['Sui'] + ax_err['Nrl']
+    put('rkAxRms', math.sqrt(np.mean(np.square(allax))), '{:.0f}'); put('rkAxLo', min(allax), '{:+.0f}'); put('rkAxHi', max(allax), '{:+.0f}')
+    RES['rockoon_ax_err'] = ax_err
+    fx = minimize_scalar(lambda c: rk_rms(m_ax, SUI, c), bounds=(0.5, 6.0), method='bounded')
+    put('rkAxCdFit', fx.x, '{:.1f}'); put('rkAxCdRms', 100 * fx.fun, '{:.0f}')
     gnd = [deacon(w, 19680, 1.0, z0=0.0, elev=90.0, coast=True)['apogee'] / 1e3 for w in (190.50, 232.65)]
     put('deaGroundLight', gnd[0], '{:.0f}'); put('deaGroundHeavy', gnd[1], '{:.0f}')
     # ---- baseline
@@ -759,69 +771,35 @@ def main():
             put('fx' + tag + nm, 1 - r.var() / yv.var(), '{:.2f}'); put('fx' + tag + nm + 'Sd', 100 * r.std(), '{:.1f}')
         put('fx' + tag + 'N', len(E), '{:d}')
 
-    # final tests (results/final.json, written by final_tests.py)
-    Fz = json.load(open(os.path.join(ROOT, 'results', 'final.json')))
-    RES['final'] = Fz
-    ru = Fz['rule']['families']
-    put('ruleErrMax', max(abs(f['z_rule'] - f['z_model']) for f in ru), '{:.1f}')
-    put('ruleFormErrMax', max(abs(f['z_formula'] - f['z_model']) for f in ru), '{:.1f}')
-    put('ruleLeffLo', min(f['Leff'] for f in ru), '{:.1f}'); put('ruleLeffHi', max(f['Leff'] for f in ru), '{:.1f}')
-    put('ruleLLo', min(f['L'] for f in ru), '{:.1f}'); put('ruleLHi', max(f['L'] for f in ru), '{:.1f}')
-    put('ruleFitErr', 100 * max(f['fit_err'] for f in ru), '{:.1f}'); put('ruleHLift', Fz['rule']['H_lift'], '{:.1f}')
-    put('ruleHrhoLo', min(f['Hrho'] for f in ru), '{:.1f}'); put('ruleHrhoHi', max(f['Hrho'] for f in ru), '{:.1f}')
-    put('ruleSideErr', 100 * max(abs(f['rhs'] / f['me'] - 1) for f in ru), '{:.0f}')
-    al_ = [f for f in ru if f['mat'] == 'Al6061T6']
-    put('ruleSlope', np.polyfit([math.log10(f['ground']) for f in al_], [f['z_rule'] for f in al_], 1)[0], '{:.1f}')
-    b80 = [f for f in ru if f['mat'] == 'Al6061T6' and f['mfix'] == 80.0][0]
-    put('ruleLeffBase', b80['Leff'], '{:.1f}'); put('ruleSigPred', b80['Leff'] * math.log(2), '{:.1f}')
-    put('ruleSigModel', RES['zsSigLo'] - RES['zsSigHi'], '{:.1f}')
-    put('ruleGonPred', b80['Leff'] / 3 * math.log(1.20 / 1.05), '{:.2f}')
-    put('ruleGonModel', RES['zsGonHi'] - RES['zsGonLo'], '{:.2f}')
-    put('ruleNineFive', 1.5 * b80['Hrho'], '{:.1f}')
-    with open(os.path.join(ROOT, 'paper', 'tab_rule.tex'), 'w') as f_:
-        f_.write('\n'.join('%s & %.0f & %.1f & %.1f & %.2f & %.1f & %.1f & %.1f & %.0f & %.0f \\\\' % (
-            'Al' if f['mat'] == 'Al6061T6' else 'steel', f['mfix'], f['L'], f['Hrho'], f['Leff'], f['z_model'], f['z_rule'], f['z_formula'], f['me'], f['rhs']) for f in ru) + '\n')
-    cp = Fz['compare']; mc = Fz['mc']
-    lab = {'Al6061T6': 'Al', 'SS321': 'steel', 'solid': 'solid'}
-    same = {(o['mat'], o['mfix']): o['ground'] for o in RES['optimum'] if o['target'] == 100.0}
-    pmap = {(o['mat'], o['mfix']): o for o in mc}
-    rows_ = []
-    for o in cp:
-        k = (o['mat'], o['mfix']); p_ = pmap.get(k)
-        rows_.append('%s & %.0f & %s & %s & %s & %s & %.1f & $%s$ & %s \\\\' % (
-            lab[o['mat']], o['mfix'], thousands(same[k]) if k in same else '--', thousands(o['ground1']), thousands(o['ground2']),
-            thousands(o['launched_central']), o['z_central'], ('%+d' % int(round(100 * o['save_central']))).replace('+0', '0') if int(round(100 * o['save_central'])) == 0 else '%+d' % int(round(100 * o['save_central'])), '%.0f' % (100 * p_['p_save']) if p_ else '--'))
-    with open(os.path.join(ROOT, 'paper', 'tab_compare.tex'), 'w') as f_:
-        f_.write('\n'.join(rows_) + '\n')
-    def rng_(sel, key, scale=100.0, fmt='{:.0f}', tag=''):
-        v = [scale * o[key] for o in cp if sel(o)]; put(tag + 'Lo', min(v), fmt); put(tag + 'Hi', max(v), fmt)
-    liq = lambda o: o['mat'] != 'solid'
-    red = [1 - o['ground1_plain'] / same[(o['mat'], o['mfix'])] for o in cp if liq(o)]
-    put('fgRedLo', 100 * min(red), '{:.0f}'); put('fgRedHi', 100 * max(red), '{:.0f}')
-    fins = sorted({o['ground1_params'][0] for o in cp if liq(o)}); tws = [o['ground1_params'][1] for o in cp if liq(o)]; seps = [o['ground1_params'][2] for o in cp if liq(o)]
-    put('fgFinLo', min(fins), '{:.0f}'); put('fgFinHi', max(fins), '{:.0f}'); put('fgTwLo', min(tws), '{:.1f}'); put('fgTwHi', max(tws), '{:.1f}')
-    put('fgSepLo', min(seps), '{:.2f}'); put('fgSepHi', max(seps), '{:.2f}')
-    rng_(liq, 'z_plain', 1.0, '{:.0f}', 'fpZ'); rng_(liq, 'save_plain', tag='fpSave')
-    rng_(liq, 'z_central', 1.0, '{:.0f}', 'fcZ')
-    rng_(lambda o: o['mat'] == 'SS321', 'save_central', tag='fcSs'); rng_(lambda o: o['mat'] == 'Al6061T6', 'save_central', tag='fcAl')
-    rng_(lambda o: o['mat'] == 'solid', 'save_central', tag='fcSo'); rng_(lambda o: o['mat'] == 'solid', 'z_central', 1.0, '{:.0f}', 'fcSoZ')
-    for mat_, tg in (('SS321', 'Ss'), ('Al6061T6', 'Al'), ('solid', 'So')):
-        rr = [o['ground2'] / o['ground1'] for o in cp if o['mat'] == mat_]
-        put('two' + tg + 'Lo', min(rr), '{:.2f}'); put('two' + tg + 'Hi', max(rr), '{:.2f}')
-        TEX['two' + tg + 'N'] = str(sum(x < 1 for x in rr))
-    for tg, kk in (('A', '0.3'), ('B', '1.0'), ('C', '3.0'), ('D', '10.0')):
-        cc = Fz['cost'][kk]
-        put('fcost' + tg + 'Lo', min(o['zstar'] for o in cc), '{:.0f}'); put('fcost' + tg + 'Hi', max(o['zstar'] for o in cc), '{:.0f}')
-        TEX['fcost' + tg + 'N'] = str(sum(o['dearer'] for o in cc)); TEX['fcostTot'] = str(len(cc))
-    for mat_, tg in (('SS321', 'Ss'), ('Al6061T6', 'Al')):
-        v = [o for o in mc if o['mat'] == mat_]
-        put('mcP' + tg + 'Lo', 100 * min(o['p_save'] for o in v), '{:.1f}' if tg == 'Ss' else '{:.0f}'); put('mcP' + tg + 'Hi', 100 * max(o['p_save'] for o in v), '{:.0f}')
-        put('mcMed' + tg + 'Lo', 100 * min(o['save_q'][2] for o in v), '{:.0f}'); put('mcMed' + tg + 'Hi', 100 * max(o['save_q'][2] for o in v), '{:.0f}')
-    put('mcZLo', min(o['z_q'][0] for o in mc), '{:.0f}'); put('mcZHi', max(o['z_q'][4] for o in mc), '{:.0f}')
-    put('mcZWidth', max(o['z_q'][4] - o['z_q'][0] for o in mc), '{:.1f}')
-    put('mcSaveWidth', 100 * max(o['save_q'][4] - o['save_q'][0] for o in mc), '{:.0f}')
-    b_ = pmap[('Al6061T6', 80.0)]
-    put('mcBaseP', 100 * b_['p_save'], '{:.0f}'); put('mcBaseQlo', 100 * b_['save_q'][0], '{:.0f}'); put('mcBaseQhi', 100 * b_['save_q'][4], '{:.0f}')
+    # ---- cross-checks against NASA CEA run directly (cea_check.py) and against RocketPy (rocketpy_check.py)
+    C = json.load(open(os.path.join(ROOT, 'results', 'cea_check.json')))
+    cn = C['cantera']; ds, dfz = C['design_shift'], C['design_frozen']
+    put('ceaTc', ds['T'][0], '{:.0f}'); put('ceaCstar', ds['cstar'], '{:.0f}')
+    put('ceaIspG', ds['isp_vac'][2], '{:.1f}'); put('ceaIspB', ds['isp_vac'][3], '{:.1f}'); put('ceaIspFr', dfz['isp_vac'][3], '{:.1f}')
+    put('cnIspG', cn['isp_vac_g'], '{:.1f}'); put('cnIspB', cn['isp_vac_b'], '{:.1f}')
+    dif = [abs(ds['isp_vac'][2] / cn['isp_vac_g'] - 1), abs(ds['isp_vac'][3] / cn['isp_vac_b'] - 1), abs(dfz['isp_vac'][3] / cn['frozen_b'] - 1),
+           abs(ds['cstar'] / cn['cstar'] - 1)]
+    dif += [abs(s_['cea_shift'] / s_['cantera_shift'] - 1) for s_ in C['sweep'] if s_['cantera_shift']]
+    dif += [abs(s_['cea_frozen'] / s_['cantera_frozen'] - 1) for s_ in C['sweep'] if s_['cantera_frozen']]
+    put('ceaMaxDiff', 100 * max(dif), '{:.2f}')
+    put('ceaBench', C['bench_shift']['isp'][-1], '{:.1f}'); put('ceaBenchFr', C['bench_frozen']['isp'][-1], '{:.1f}')
+    put('ceaTcDiff', abs(ds['T'][0] - cn['Tc']), '{:.1f}')
+    P_ = json.load(open(os.path.join(ROOT, 'results', 'rocketpy_check.json')))
+    for tag, k in (('Gnd', 'ground'), ('Bal', 'balloon')):
+        a3, a6 = P_[k + '_3DOF'], P_[k + '_6DOF']
+        put('rp' + tag + 'Three', a3['apogee'] / 1e3, '{:.2f}' if tag == 'Gnd' else '{:.1f}'); put('rp' + tag + 'Six', a6['apogee'] / 1e3, '{:.2f}' if tag == 'Gnd' else '{:.1f}')
+        put('rp' + tag + 'Ours', a3['ours_apogee'] / 1e3, '{:.2f}' if tag == 'Gnd' else '{:.1f}')
+        put('rp' + tag + 'Diff', 100 * max(abs(a3['apogee'] / a3['ours_apogee'] - 1), abs(a6['apogee'] / a3['ours_apogee'] - 1)), '{:.2f}')
+        put('rp' + tag + 'Vdiff', abs(a3['v_max'] - a3['ours_vb']), '{:.1f}')
+    put('rpMaxDiff', max(RES['rpGndDiff'], RES['rpBalDiff']), '{:.2f}')
+    # ---- tests added in the revision
+    import revision_analysis
+    revision_analysis.main(put, RES, TEX)
+    # ---- the envelope rule for any envelope law; published dry-mass data, fineness-dependent drag and the Aerobee check
+    import general_rule
+    general_rule.main(put, RES, TEX)
+    import realdata_analysis
+    realdata_analysis.main(put, RES, TEX)
 
     # Sobol
     RES['sobol'] = S['sobol']
